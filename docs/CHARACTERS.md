@@ -1,0 +1,28 @@
+# Characters
+
+## HERO — Founder · Mythic
+Before the islands had names, there was only static. Hero walked into it wearing a helmet forged from the first cracked candle; the star in his eye caught fire and stayed lit. He drew the five islands out of the noise — the outer dots, the twin ovals, the great **h**. Now the static is coming back. *"I didn't build this place to be safe. I built it so you'd have somewhere to stand when the market breaks."*
+**Signature:** Star-Eye Verdict — time freezes, orange light wipes the field. **Unlock:** beat the Master of the h on Hyper Lev in one run.
+
+## BANKYO — Tidekeeper · Legendary
+Every trade that survives leaves a drop of light in the turquoise ring. Bankyo walked into the shallows to drown his last losing position and the light gathered into an orb. He never left the sea. *"Your losses fed the ocean. I'm just giving it back."*
+**Signature:** Flow Orb Tsunami — heals allies, crashes through enemies. **Unlock:** survive three Epochs without a wipe.
+
+## ZAYN — King of the Outer Dots · Legendary
+The outer islands don't have laws. They have Zayn — Wayfarers, a grin, and a gold chain where every link is a duel he refused to lose. *"Size your position, kid. I'm sizing mine at everything."*
+**Signature:** Gold Chain Rampage — claw rush, roar stun, chain lasso. **Unlock:** win five 1v1s in a row.
+
+## LYRA — Moonleaf Scout · Epic
+First elf through the portals; reads volatility like wind. *"Everyone gets scared. Not everyone gets ready."* Move: Leafstep Dodge. Unlock: no-hit run.
+
+## HERTZLING — Spirit of the Flow · Epic
+Purple light and tiny skulls for every liquidation the ocean swallowed. *"Every wipeout echoes. I'm the echo."* Move: Resonance Pulse. Unlock: secret frequency on stream.
+
+## CHADO — Shadow Blade of the Sunset Dot · Epic
+Twin katanas, face never shown. *"You don't see the cut. You see the result."* Move: Sunset Twin Slash. Unlock: 100 back-attacks in a Season.
+
+## KAEL — Blue Moon Berserker · Rare
+Moon shard in his left eye; max leverage, always gets back up. *"Liquidated? Cool. Run it back."* Move: Moonflare Frenzy. Unlock: 10 liquidations in one stream and still finish.
+
+## WARDEN — Wingbreaker Vanguard · Rare
+Green wing-mark armor from Hero; first line of defense. *"Nobody gets left on the chart."* Move: Green Wing Barrage. Unlock: team raid with zero allies lost.

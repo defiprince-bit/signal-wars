@@ -1,0 +1,47 @@
+<!doctype html><html><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>HertzFlow: Signal Wars — Ember Dot (fan prototype)</title>
+<link rel="stylesheet" href="style.css"></head><body>
+<canvas id="c"></canvas>
+<div id="fade"></div>
+
+<section id="title" class="screen on">
+  <div class="logo">HERTZFLOW<span>SIGNAL WARS</span></div>
+  <p class="tag">Mission 01 · Ember Dot — the static is coming ashore.</p>
+  <div class="cards">
+    <div class="card pick" data-c="zayn"><div class="port zayn">Z</div><h3>ZAYN</h3><small>King of the Outer Dots · Legendary</small>
+      <p>Every link on his gold chain is a duel he refused to lose.</p><b>PLAY</b></div>
+    <div class="card locked"><div class="port hero">H</div><h3>HERO</h3><small>Founder · Mythic</small>
+      <p>He pulled the islands out of the static. The star in his eye never went out.</p><i>🔒 Beat the Master of the h on Hyper Lev</i></div>
+    <div class="card locked"><div class="port bankyo">B</div><h3>BANKYO</h3><small>Tidekeeper · Legendary</small>
+      <p>Every trade that survived became light in his ocean.</p><i>🔒 Survive 3 Epochs without a wipe</i></div>
+  </div>
+  <p class="disc">Unofficial fan-made prototype. Not affiliated with or endorsed by HertzFlow. No wallet, no real money.</p>
+</section>
+
+<div id="cine" class="hide"><div class="bar top"></div><div class="bar bot"></div>
+  <div id="cineText">ALMOST THERE</div><div id="cineSub">Ember Dot · 0.4 km</div>
+  <button id="skip">SKIP ▸</button></div>
+
+<div id="hud" class="hide">
+  <div id="mission"><b>EMBER DOT</b><span id="obj">Clear the beach</span></div>
+  <div id="score">0</div>
+  <div id="banner"></div>
+  <div id="bars"><div class="nm">ZAYN</div>
+    <div class="bar hp"><i id="hpF"></i></div><div class="bar en"><i id="enF"></i></div></div>
+  <div id="stick"><div id="knob"></div></div>
+  <div id="pw">
+    <button class="p big" data-p="wave"><span>WAVE</span><kbd>Q / Click</kbd><em></em></button>
+    <button class="p" data-p="chain"><span>CHAIN</span><kbd>E</kbd><em></em></button>
+    <button class="p" data-p="roar"><span>ROAR</span><kbd>R</kbd><em></em></button>
+    <button class="p dodge" data-p="dodge"><span>DODGE</span><kbd>Space</kbd><em></em></button>
+  </div>
+  <div id="help">WASD move · ←/→ or drag to turn camera · Q E R Space</div>
+</div>
+
+<section id="end" class="screen hide"><h1 id="endT"></h1><p id="endS"></p>
+  <button id="again">RUN IT BACK</button><button id="menu" class="ghost">CHARACTERS</button>
+  <p class="disc">Unofficial fan-made prototype · not affiliated with HertzFlow</p></section>
+<script type="importmap">{"imports":{"three":"./vendor/three.module.js"}}</script>
+<script type="module" src="game.js"></script>
+</body></html>
