@@ -14,7 +14,7 @@ npm start            # http://localhost:8080
 ```
 No install step — the server has zero dependencies (Node 18+). Alt: `cd public && python3 -m http.server 8080`.
 
-**Controls:** WASD/arrows move · mouse/tap WAVE · CHAIN · ROAR · DODGE on-screen buttons (mobile) or keys shown in HUD.
+**Controls:** WASD move · ←→ or drag to turn camera · Q Wave · E Chain · R Roar · Space Dodge (on-screen buttons on mobile).
 
 ## Deploy
 - **Railway / Render / Fly.io:** start command `npm start` (uses `$PORT`).
