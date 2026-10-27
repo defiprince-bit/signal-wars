@@ -1,7 +1,7 @@
 {
   "name": "signal-wars",
   "version": "0.1.0",
-  "description": "Unofficial open-source HertzFlow fan game — third-person browser brawler (Three.js)",
+  "description": "Unofficial open-source HertzFlow fan game — isometric swarm browser brawler (Three.js)",
   "license": "MIT",
   "type": "module",
   "scripts": { "start": "node server/index.js", "dev": "node server/index.js" },

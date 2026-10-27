@@ -1,10 +1,27 @@
 # Design
 
+## North star (locked Oct 2026): isometric swarm ARPG
+Reference: the user's YouTube Short — https://youtube.com/shorts/czlDzzrbdmE (Asmongold reacts to an AI-made isometric action game). That clip *is* the target feel:
+
+- **Camera:** fixed isometric / top-down 3/4, smooth follow, never rotates. No over-the-shoulder.
+- **Readability:** muted dark ground; only the player (sky-blue/gold) and the Static (red-magenta) are saturated, so FX pop.
+- **Loop:** kite a swarm — fodder packs toward you, you move in any direction while attacking (auto-fire toward cursor / nearest enemy).
+- **Feedback:** loud AoE explosions, bouncy white damage numbers (yellow crits), thin red HP bars, screen shake.
+- **Shield:** obvious cyan bubble during dodge i-frames and the ROAR buff.
+- **Drops:** glowing yellow gems on every kill, magnet to the player, feed Flow energy.
+- **Telegraphs:** red pulse + red ground decal before big hits (Brute slam), per art direction.
+
 ## Vision
-A fast, loud, colorful third-person action game in a futuristic "multiverse" style, branded in HertzFlow sky blue. Short missions that are fun to watch on a live stream.
+A fast, loud, colorful action game in a futuristic "multiverse" style, branded in HertzFlow sky blue. Short missions that are fun to watch on a live stream.
 
 ## Camera
-Third-person over-the-shoulder, slightly elevated so the character and weapon are always readable. Camera pulls back during big powers and boss fights.
+Isometric follow camera (offset ≈ (0, 40, 28), FOV 42 desktop / 55 portrait). The boat "Almost There" intro keeps its cinematic chase cam, then fades to black into the isometric arena.
+
+## Controls (this pass)
+WASD / arrows / stick = move (screen-relative) · mouse aims · WAVE auto-fires (hold click / Q to force) · E Gold Chain (AoE) · R Roar (stun + shield buff) · Space dodge (shield i-frames) · M music.
+
+## Performance rules
+Crabs are one InstancedMesh (body/claws/eyes); gems instanced; all Static share one noise-flicker shader; HP bars + damage numbers on a single 2D canvas overlay; enemies ≤ ~4k tris.
 
 ## Mission flow (boat intro)
 1. Pick a character you own.
