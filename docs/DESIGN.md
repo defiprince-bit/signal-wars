@@ -30,6 +30,13 @@ Crabs are one InstancedMesh (body/claws/eyes); gems instanced; all Static share 
 4. Fade in on the beach, weapon in hand, mission objective on screen.
 Every mission tells one story beat and ends in a payoff (boss, rescue, island claimed).
 
+## Section levels
+Missions are cut into **3 short sections** on the island instead of one endless fight. Each section has its own ground tint/edge color, objective, Warden/enemy line and wave plan. HUD (top-left) shows `n/3 · SECTION NAME`, a 3-segment progress bar and the live objective.
+- **Clear:** finish the section's waves (+ any hold objective) → "SECTION CLEARED" banner → fade → next section card. HP refills, score/kills/gems carry over.
+- **Fail:** LIQUIDATED → **RETRY SECTION** (restart current section with stats rolled back to section start) or **RUN IT BACK** (full mission from the boat).
+- Mission 01 sections: see [STORY.md](STORY.md#mission-01-section-levels).
+- Damage numbers merge nearby hits (≤3.5m, <0.35s) into one growing number; hard cap 8 visible floats, extras fold into the nearest. Crits stay yellow.
+
 ## Roster
 Hero (Mythic, founder, strongest) · Bankyo (Legendary) · Zayn (Legendary) · Lyra · Hertzling · Chado · Kael · Warden — see [CHARACTERS.md](CHARACTERS.md).
 

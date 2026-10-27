@@ -178,8 +178,11 @@ const floorTex = canvasTex(512, 512, (x, w, h) => { x.fillStyle = '#23242b'; x.f
   x.strokeStyle = 'rgba(77,184,255,.08)'; x.lineWidth = 2; for (let i = 0; i <= 8; i++) { x.beginPath(); x.moveTo(i * 64, 0); x.lineTo(i * 64, h); x.moveTo(0, i * 64); x.lineTo(w, i * 64); x.stroke(); } });
 floorTex.wrapS = floorTex.wrapT = THREE.RepeatWrapping; floorTex.repeat.set(6, 6);
 const arena = new THREE.Group();
-{ const f = new THREE.Mesh(new THREE.CircleGeometry(ARENA + 6, 64), new THREE.MeshStandardMaterial({ map: floorTex, roughness: 1 })); f.rotation.x = -Math.PI / 2; f.position.y = .32; arena.add(f);
-  const edge = new THREE.Mesh(new THREE.TorusGeometry(ARENA + 1, .25, 6, 96), glow(SKY)); edge.rotation.x = Math.PI / 2; edge.position.y = .4; edge.material.opacity = .5; arena.add(edge); }
+let floorM, edgeM, tower;
+{ const f = new THREE.Mesh(new THREE.CircleGeometry(ARENA + 6, 64), new THREE.MeshStandardMaterial({ map: floorTex, roughness: 1 })); f.rotation.x = -Math.PI / 2; f.position.y = .32; arena.add(f); floorM = f.material;
+  const edge = new THREE.Mesh(new THREE.TorusGeometry(ARENA + 1, .25, 6, 96), glow(SKY)); edge.rotation.x = Math.PI / 2; edge.position.y = .4; edge.material.opacity = .5; arena.add(edge); edgeM = edge.material;
+  tower = new THREE.Group(); const tr = new THREE.Mesh(new THREE.TorusGeometry(5, .15, 6, 48), glow(SKY)); tr.rotation.x = Math.PI / 2; tr.position.y = .45;
+  const pole = new THREE.Mesh(new THREE.CylinderGeometry(.35, .6, 7, 6), new THREE.MeshStandardMaterial({ color: 0x1b2230, emissive: SKY, emissiveIntensity: .3 })); pole.position.y = 3.5; tower.add(tr, pole); tower.position.set(0, 0, -14); tower.visible = false; arena.add(tower); }
 arena.visible = false; scene.add(arena);
 
 // ===== shared Static shader (red-magenta, noise flicker) =====
@@ -241,7 +244,11 @@ const ox = ov.getContext('2d'); let DPR = 1;
 const nums = [];
 const proj = new THREE.Vector3();
 function toScreen(p, y) { proj.set(p.x, y, p.z).project(cam); return [(proj.x + 1) / 2 * innerWidth, (1 - proj.y) / 2 * innerHeight]; }
-function floatTxt(p, t, big = false, col = '#fff') { nums.push({ x: p.x, z: p.z, y: 3, t: 0, txt: t, vx: (Math.random() - .5) * 60, vy: -220 - Math.random() * 80, big, col }); if (nums.length > 160) nums.shift(); }
+function floatTxt(p, t, big = false, col = '#fff') { const v = +t;
+  if (!isNaN(v) && col !== '#ff4a5a') { let best = null, bd = 1e9; // merge nearby fresh hits; hard cap 8 visible
+    for (const n of nums) if (n.v != null) { const d = Math.hypot(n.x - p.x, n.z - p.z); if ((d < 3.5 && n.t < .35 || nums.length >= 8) && d < bd) { bd = d; best = n; } }
+    if (best) { best.v += v; best.txt = String(best.v); best.big = best.big || big || best.v >= 60; if (big) best.col = col; best.t = Math.min(best.t, .05); return; } }
+  nums.push({ v: isNaN(v) || col === '#ff4a5a' ? null : v, x: p.x, z: p.z, y: 3, t: 0, txt: t, vx: (Math.random() - .5) * 60, vy: -220 - Math.random() * 80, big, col }); if (nums.length > 160) nums.shift(); }
 function drawOverlay(dt) {
   const w = innerWidth, h = innerHeight; if (ov.width !== w * DPR) { DPR = Math.min(devicePixelRatio, 2); ov.width = w * DPR; ov.height = h * DPR; }
   ox.setTransform(DPR, 0, 0, DPR, 0, 0); ox.clearRect(0, 0, w, h); if (S.mode !== 'play' && S.mode !== 'end') return;
@@ -260,11 +267,17 @@ const S = { mode: 'title', t: 0, yaw: 0, hp: 100, en: 40, score: 0, kills: 0, xp
 const CD = { wave: .28, chain: 3, roar: 6, dodge: 1 };
 const COST = { chain: 15, roar: 30 };
 const rep = (t, n) => Array(n).fill(t);
-const WAVES = [
-  [...rep('crab', 36), ...rep('wick', 8)],
-  [...rep('crab', 50), ...rep('wick', 24), 'brute'],
-  [...rep('crab', 70), ...rep('wick', 40), 'brute', 'brute', 'brute'],
-].map(w => w.sort(() => Math.random() - .5));
+const mix = w => w.sort(() => Math.random() - .5);
+// Mission 01 is cut into 3 sectioned levels on the Ember Dot island; each has its own tint, objective and wave plan
+const SECTIONS = [
+  { name: 'SHORE LANDING', obj: 'Clear the beach', floor: 0x8a7458, edge: 0xff3cac, line: 'Warden: "Those are crabs. Ugly. Easy. Hit them."',
+    waves: () => [mix(rep('crab', 24)), mix([...rep('crab', 30), ...rep('wick', 10)])] },
+  { name: 'TOWER RIDGE', obj: 'Restore Signal Tower 1', floor: 0x4c7f8a, edge: 0x4DB8FF, hold: 15, line: 'Warden: "Stand in the ring. Keep the Tower breathing."',
+    waves: () => [mix([...rep('crab', 36), ...rep('wick', 14)]), mix([...rep('crab', 44), ...rep('wick', 22)])] },
+  { name: 'CRATER GATE', obj: 'Defeat the Red Candle Brute', floor: 0x8a4a46, edge: 0xff2a3a, line: 'Brute: "…LIQUIDATE…"',
+    waves: () => [mix([...rep('crab', 30), ...rep('wick', 20)]), ['brute', ...mix([...rep('crab', 40), ...rep('wick', 16)])]] },
+];
+let WAVES = [];
 const keys = {}, joy = { x: 0, y: 0 };
 const banner = (t, c = '#fff') => { const b = $('#banner'); b.textContent = t; b.style.color = c; b.style.opacity = 1; clearTimeout(banner.h); banner.h = setTimeout(() => b.style.opacity = 0, 1400); };
 const fade = (on) => $('#fade').style.opacity = on ? 1 : 0;
@@ -284,12 +297,27 @@ function landOnBeach() {
     boat.visible = false; boat.remove(zayn); scene.add(zayn); zayn.position.set(0, .3, 0); S.yaw = Math.PI; setArena(true);
     Object.assign(S, { hp: 100, en: 40, score: 0, kills: 0, xp: 0, wave: 0, iframes: 0, buff: 0, spawnQ: [], waveNext: 0, cd: { wave: 0, chain: 0, roar: 0, dodge: 0 } });
     cam.position.set(0, 30, 22); show('#cine', false); show('#hud', true);
-    setTimeout(() => { fade(0); S.mode = 'play'; banner('MISSION 01 · EMBER DOT', '#4DB8FF'); setTimeout(nextWave, 1600); }, 700);
+    startSection(0, true);
   }, 1000);
 }
+function secHud() { const c = SECTIONS[S.sec]; $('#secName').textContent = `${S.sec + 1}/${SECTIONS.length} · ${c.name}`;
+  $('#secDots').innerHTML = SECTIONS.map((_, i) => `<i class="${i < S.sec ? 'done' : i === S.sec ? 'cur' : ''}"></i>`).join('');
+  $('#obj').textContent = c.hold ? `${c.obj} — hold the ring ${Math.min(c.hold, S.hold).toFixed(0)}/${c.hold}s · wave ${S.wave}/${WAVES.length}` : `${c.obj} — wave ${S.wave}/${WAVES.length}`; }
+function startSection(i, fromBoat = false) { // entering a section: (fade already black) reset field, tint ground, fade in, banner card
+  const c = SECTIONS[i]; clearField(); waves.length = 0; S.sec = i; S.wave = 0; S.hold = 0; S.spawnQ = []; S.waveNext = 0; S.secDone = false; WAVES = c.waves();
+  S.hp = 100; S.iframes = 1.5; S.buff = 0; S.cd = { wave: 0, chain: 0, roar: 0, dodge: 0 }; if (fromBoat) Object.assign(S, { en: 40, score: 0, kills: 0, xp: 0 }); else S.en = Math.max(S.en, 40);
+  floorM.color.set(c.floor); edgeM.color.set(c.edge); tower.visible = !!c.hold; zayn.position.set(0, .3, c.hold ? 6 : 0); S.secStart = { score: S.score, kills: S.kills, xp: S.xp }; secHud();
+  setTimeout(() => { fade(0); S.mode = 'play'; banner(fromBoat ? 'MISSION 01 · EMBER DOT' : `SECTION ${i + 1} · ${c.name}`, '#4DB8FF');
+    setTimeout(() => { if (S.sec === i && S.mode === 'play') { banner(c.name, '#ffc83d'); $('#line').textContent = c.line; $('#line').style.opacity = 1; setTimeout(() => $('#line').style.opacity = 0, 3200); } }, 1500);
+    setTimeout(() => { if (S.sec === i && S.mode === 'play' && !S.wave) nextWave(); }, 2600); }, 600); }
+function sectionClear() { if (S.secDone) return; S.secDone = true;
+  if (S.sec >= SECTIONS.length - 1) return win();
+  S.mode = 'clear'; banner(`${SECTIONS[S.sec].name} CLEARED`, '#4DB8FF'); ring(zayn.position, SKY, 30, .8, .3, .06);
+  setTimeout(() => { fade(1); S.mode = 'clear'; setTimeout(() => startSection(S.sec + 1), 900); }, 1800); }
+window.__section = i => { fade(1); S.mode = 'clear'; setTimeout(() => startSection(i), 50); };
 function nextWave() {
-  if (S.wave >= WAVES.length) return win();
-  S.spawnQ = [...WAVES[S.wave]]; S.wave++; $('#obj').textContent = `Wave ${S.wave}/${WAVES.length} — the Static swarm is coming ashore`;
+  if (S.wave >= WAVES.length) return;
+  S.spawnQ = [...WAVES[S.wave]]; S.wave++; secHud();
   banner(`WAVE ${S.wave} · ${S.spawnQ.length} STATIC`, '#ff3cac');
 }
 function spawn(type, ang) { const T = TYPES[type], a = ang ?? Math.random() * 6.28, r = ARENA + 2;
@@ -298,8 +326,8 @@ function spawn(type, ang) { const T = TYPES[type], a = ang ?? Math.random() * 6.
   if (type === 'brute') { e.mesh.scale.setScalar(1.15); banner('RED CANDLE BRUTE', '#ff2a5a'); }
   enemies.push(e); burst(e.pos.clone().setY(1), [0xff1450, 0xa24cff], 10, 5, 4);
 }
-function win() { S.mode = 'end'; setTimeout(() => { $('#endT').textContent = 'MISSION COMPLETE'; $('#endT').style.color = '#4DB8FF'; $('#endS').textContent = `Ember Dot secured · ${S.kills} Static cleared · ${S.xp} gems · score ${S.score}. Next: Moonleaf Oval.`; show('#end', true); }, 900); }
-function lose() { S.mode = 'end'; banner('LIQUIDATED', '#ff2a5a'); setTimeout(() => { $('#endT').textContent = 'LIQUIDATED'; $('#endT').style.color = '#ff2a5a'; $('#endS').textContent = `Zayn went down on the beach · ${S.kills} kills · score ${S.score}. Run it back?`; show('#end', true); }, 1200); }
+function win() { S.mode = 'end'; setTimeout(() => { show('#retry', false); tower.visible = false; $('#endT').textContent = 'MISSION COMPLETE'; $('#endT').style.color = '#4DB8FF'; $('#endS').textContent = `Ember Dot secured · ${S.kills} Static cleared · ${S.xp} gems · score ${S.score}. Next: Moonleaf Oval.`; show('#end', true); }, 900); }
+function lose() { S.mode = 'end'; banner('LIQUIDATED', '#ff2a5a'); setTimeout(() => { $('#endT').textContent = 'LIQUIDATED'; $('#endT').style.color = '#ff2a5a'; $('#endS').textContent = `Zayn went down in ${SECTIONS[S.sec].name} · ${S.kills} kills · score ${S.score}. Retry the section or run the mission back.`; show('#retry', true); show('#end', true); }, 1200); }
 
 const aimDir = () => new THREE.Vector3(Math.sin(S.yaw), 0, Math.cos(S.yaw));
 function boom(p, col, r, dmg, kb = 10) { // AoE explosion: flash + rings + sparks + damage
@@ -353,6 +381,7 @@ addEventListener('pointermove', e => { if (e.pointerType === 'mouse') { mouse.on
   st.addEventListener('pointerup', () => { id = null; joy.x = joy.y = 0; kn.style.transform = ''; }); }
 $('.card.pick').onclick = () => { fade(1); setTimeout(() => { startCine(); fade(0); }, 600); };
 $('#skip').onclick = landOnBeach;
+$('#retry').onclick = () => { show('#end', false); fade(1); S.mode = 'clear'; const s0 = S.secStart; setTimeout(() => { Object.assign(S, s0); startSection(S.sec); }, 600); };
 $('#again').onclick = () => { show('#end', false); fade(1); setTimeout(() => { startCine(); fade(0); }, 600); };
 $('#menu').onclick = () => { show('#end', false); show('#hud', false); show('#title', true); S.mode = 'title'; setArena(false); clearField(); };
 
@@ -394,7 +423,11 @@ function tick(now) {
       // auto-fire WAVE (kite + shoot); mouse hold / Q also fires
       if (mouse.down || (!mouse.on && nearest(24)) || (mouse.on && nearest(26))) use('wave');
       if (S.spawnQ.length) { S.spawnT -= dt; if (S.spawnT <= 0) { const a = Math.random() * 6.28, n = Math.min(S.spawnQ.length, 4 + S.wave * 2); for (let k = 0; k < n; k++) spawn(S.spawnQ.shift(), a + (Math.random() - .5) * .9); S.spawnT = 1.4 - S.wave * .2; } }
-      else if (!enemies.length && S.wave) { S.waveNext += dt; if (S.wave >= WAVES.length) win(); else if (S.waveNext > 1.5) { S.waveNext = 0; nextWave(); } }
+      else if (S.wave && S.wave >= WAVES.length) { const c = SECTIONS[S.sec];
+        if (c.hold && S.hold < c.hold) { if (enemies.length < 10) S.spawnQ.push(...rep('crab', 8)); } // keep pressure until the tower is restored
+        else if (!enemies.length) { S.waveNext += dt; if (S.waveNext > 1) sectionClear(); } }
+      else if (!enemies.length && S.wave) { S.waveNext += dt; if (S.waveNext > 1.5) { S.waveNext = 0; nextWave(); } }
+      { const c = SECTIONS[S.sec]; if (c.hold && S.hold < c.hold) { if (Math.hypot(zayn.position.x - tower.position.x, zayn.position.z - tower.position.z) < 5) { S.hold += dt; if (S.hold >= c.hold) { banner('TOWER 1 RESTORED', '#4DB8FF'); ring(tower.position, SKY, 40, 1, .4, .08); } } if ((S.t * 4 | 0) !== (S.lt | 0)) { S.lt = S.t * 4; secHud(); } } }
     }
     // enemies: swarm toward player with simple separation
     const zp = zayn.position;

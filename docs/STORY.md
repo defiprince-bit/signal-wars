@@ -30,8 +30,19 @@ Theme: **discipline beats greed.** Leverage is power, but the Master is what hap
 | 7. Clue | Brute drops a cracked chip showing the Dust Array map. | Pick up the chip | **Warden:** "That's a broadcast key… from the desert. Someone's behind this." |
 | 8. Outro | Island lights up sky-blue. Results screen. | — | **Zayn:** "One island down." |
 
+### Mission 01 section levels (shipped build)
+Boat "Almost There" intro → fade onto Ember Dot, then:
+
+| # | Section | Ground | Objective | Waves | Exit |
+|---|---------|--------|-----------|-------|------|
+| 1 | **SHORE LANDING** | warm sand | Clear the beach | 24 crabs → 30 crabs + 10 Wick Runners | all Static down |
+| 2 | **TOWER RIDGE** | teal | Restore Signal Tower 1 — stand in the ring 15s | 36 crabs + 14 wicks → 44 crabs + 22 wicks; crab packs keep coming until the tower is restored | tower restored + field clear |
+| 3 | **CRATER GATE** | ember red | Defeat the Red Candle Brute | 30 crabs + 20 wicks → **Brute** + 40 crabs + 16 wicks | Brute and adds down → MISSION COMPLETE |
+
+Beats 1–3 above map to Section 1, beats 4–5 to Section 2, beats 6–8 to Section 3.
+
 **Rewards:** 100 Merits · +1 Signal Tower lit · Unlock Moonleaf Oval · Cosmetic: "First Signal" badge · Bonus 25 Merits for no-damage Brute kill.
-**Fail state:** fall → respawn at last tower (no game over spiral).
+**Fail state:** LIQUIDATED → Retry Section (restart the current section, no game-over spiral) or Run It Back from the boat.
 
 ---
 
