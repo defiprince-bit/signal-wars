@@ -64,3 +64,12 @@ Snappy, not floaty: velocity eases to target in ~0.05s, near-instant stop, snap-
 
 ## Audio
 Theme ducks to ~30% under combat (title 0.55 → boat 0.32 → combat 0.16) so synth SFX read: hit tick, shot whoosh, boom, gem blip, dodge whoosh, roar, hurt. Mute (M / ♪) silences both.
+
+## Skill strip spec (art director)
+4 dark squares (60px desktop, left edge; 52px 2×2 bottom-right on touch, 48px small phones), colored glyph only: WAVE cyan arc · CHAIN gold link · ROAR magenta ring · DODGE green dash. Cooldown = clockwise dark wipe + rim refill; ready = soft emissive pulse; hotkey caption 9px under icon; no word labels in combat.
+
+## Enemy materials
+Fodder (crabs, runners): flat magenta Static shader, ≤2 materials (body + flame/eyes). Elite Brute: dark chrome + red candle/eye emissive only. Death: 0.3s static dissolve (shrinking glow + rising motes) → Merit gems drop.
+
+## Loop
+Enemy HP scales +35%/section and +15%/wave. Ambient dust motes over a muted stone floor. Best score saved in localStorage (shown on title + end screen).
