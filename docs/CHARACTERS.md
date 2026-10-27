@@ -26,3 +26,17 @@ Moon shard in his left eye; max leverage, always gets back up. *"Liquidated? Coo
 
 ## WARDEN — Wingbreaker Vanguard · Rare
 Green wing-mark armor from Hero; first line of defense. *"Nobody gets left on the chart."* Move: Green Wing Barrage. Unlock: team raid with zero allies lost.
+
+## Playable kits (fan build — all unlocked)
+Shared controls: WAVE (Q/auto) · signature skill (E) · ultimate (R, 30 Flow) · dodge (Space). Every model has a sky-blue player ring so the player never reads as Static.
+
+| Char | HP / speed | WAVE | E | R |
+|---|---|---|---|---|
+| Zayn | 100 / 15 | cyan crescent | Gold Chain lasso + AoE | Roar · shield bubble |
+| Hero | 120 / 14 | big orange crescent | Candle Breaker leap-slam | Star-Eye Verdict: freeze field 30m |
+| Bankyo | 110 / 14 | slow piercing tide orb | Flow Orb (huge piercing orb, bursts) | Tsunami: heal 35 + push |
+| Lyra | 85 / 17.5 | rapid green bolts | Leafstep Volley 7-bolt fan | Moon Rain 18-bolt ring |
+| Hertzling | 90 / 15.5 | spinning purple ring | Echo Rift: pull then burst | Resonance Pulse ×3 |
+| Chado | 90 / 17 | short wide sunset slash | Sunset Twin Slash dash-through | Shadow Step blink + double burst |
+| Kael | 105 / 15.5 | heavy blue crescent | Moon Cleave around self | Moonflare Frenzy: fire-rate/speed/damage up 5s |
+| Warden | 140 / 13.5 | green crescent | Green Wing Barrage (5 strikes) | Bulwark shield bubble |

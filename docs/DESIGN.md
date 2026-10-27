@@ -23,8 +23,9 @@ WASD / arrows / stick = move (screen-relative) · mouse aims · WAVE auto-fires 
 ## Performance rules
 Crabs are one InstancedMesh (body/claws/eyes); gems instanced; all Static share one noise-flicker shader; HP bars + damage numbers on a single 2D canvas overlay; enemies ≤ ~4k tris.
 
-## Mission flow (boat intro)
-1. Pick a character you own.
+## Mission flow (overview → boat intro)
+1. Pick any Signal Keeper (fan build: whole roster unlocked).
+1b. Aerial overview of the HertzFlow Archipelago (islands read as the logo layout) → camera dives into clouds → fade to black.
 2. Cinematic: speedboat cutting toward the island — "Almost There".
 3. Hard fade to black.
 4. Fade in on the beach, weapon in hand, mission objective on screen.
@@ -54,3 +55,12 @@ Hero (Mythic, founder, strongest) · Bankyo (Legendary) · Zayn (Legendary) · L
 - Hit-stop, sparks, screen shake, big colored waves per character.
 - Enemies: Glitch Crab, Wick Runner, Red Candle Brute, Static Spitter → the Master (melee → rifts → Liquidation Mode).
 - Hyper Lev (2x–100x) multiplies score and damage taken.
+
+## Visual north star
+`docs/ref-short-frame.png` (from the reference Short): iso top-down, muted desaturated ground, high-contrast sharp FX, one loud cyan/sky shield read on the player, tiny swarm vs ~3× elite, compact vertical icon skill strip (desktop) with cooldown sweep + tiny hotkey caption. Player sits lower-third so kite space above stays readable. FX budget: one hit flash + thin rings, short sparks, no ground-washing trails.
+
+## Movement feel
+Snappy, not floaty: velocity eases to target in ~0.05s, near-instant stop, snap-to-face (aim or move), hop stride + forward lean, landing squash, punchy 0.18s dodge hop with i-frames + whoosh. Shared by every character (per-char top speed only).
+
+## Audio
+Theme ducks to ~30% under combat (title 0.55 → boat 0.32 → combat 0.16) so synth SFX read: hit tick, shot whoosh, boom, gem blip, dodge whoosh, roar, hurt. Mute (M / ♪) silences both.

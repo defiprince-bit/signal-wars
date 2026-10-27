@@ -24,7 +24,7 @@ const sky = new THREE.Group(); scene.add(sky);
 { const s = new THREE.Mesh(new THREE.CircleGeometry(40, 32), new THREE.MeshBasicMaterial({ color: 0xffb347, fog: false })); s.position.set(-300, 70, -900); s.lookAt(0, 0, 0); scene.add(s); }
 // ocean
 const oceanG = new THREE.PlaneGeometry(700, 700, 120, 120); oceanG.rotateX(-Math.PI / 2);
-const ocean = new THREE.Mesh(oceanG, new THREE.MeshStandardMaterial({ color: 0x12c8e8, roughness: .25, metalness: .1, flatShading: true, transparent: true, opacity: .93 }));
+const ocean = new THREE.Mesh(oceanG, new THREE.MeshStandardMaterial({ color: 0x0f8fb8, roughness: .12, metalness: .35, flatShading: true, transparent: true, opacity: .95, emissive: 0x03263a }));
 ocean.position.y = -0.4; scene.add(ocean);
 const oBase = Float32Array.from(oceanG.attributes.position.array);
 // island (Ember Dot) + background HertzFlow-mark islets
@@ -261,15 +261,29 @@ function setChar(id) { CHID = id; CH = CHARS[id]; for (const c of [...zayn.child
   CD.wave = CH.wave.cd; document.querySelectorAll('.nm').forEach(n => n.textContent = CH.name); }
 // speedboat
 const boat = new THREE.Group();
-{ const hull = new THREE.Mesh(new THREE.BoxGeometry(3.4, 1.2, 9), M(0xffffff)); hull.position.y = .3;
-  const nose = new THREE.Mesh(new THREE.ConeGeometry(1.7, 3, 4), M(0xffffff)); nose.rotation.x = Math.PI / 2; nose.rotation.y = Math.PI / 4; nose.position.set(0, .3, 6); nose.scale.set(1, 1, .7);
-  const stripe = new THREE.Mesh(new THREE.BoxGeometry(3.45, .3, 9.1), M(SKY, .5)); stripe.position.y = .5;
-  const glass = new THREE.Mesh(new THREE.BoxGeometry(3, 1, .2), M(0x99e6ff, .3, { transparent: true, opacity: .6 })); glass.position.set(0, 1.4, 2.5); glass.rotation.x = -.4;
-  boat.add(hull, nose, stripe, glass); scene.add(boat); boat.visible = false; }
+{ const plan = new THREE.Shape(); plan.moveTo(-1.8, -4.5); plan.lineTo(1.8, -4.5); plan.lineTo(1.9, 1.5); plan.quadraticCurveTo(1.6, 5, 0, 7.2); plan.quadraticCurveTo(-1.6, 5, -1.9, 1.5); plan.closePath();
+  const hullG = new THREE.ExtrudeGeometry(plan, { depth: 1.3, bevelEnabled: true, bevelThickness: .35, bevelSize: .3, bevelSegments: 2, curveSegments: 10 }); hullG.rotateX(-Math.PI / 2); hullG.translate(0, -.5, 0);
+  const hull = new THREE.Mesh(hullG, M(0xf4f6f8, 0, { roughness: .35, metalness: .2 }));
+  const keel = new THREE.Mesh(hullG, M(0x0c1a2a, 0, { roughness: .4 })); keel.scale.set(.96, .45, .97); keel.position.y = -.55;
+  const stripe = new THREE.Mesh(hullG, M(SKY, .8)); stripe.scale.set(1.02, .12, 1.01); stripe.position.y = .25;
+  const deck = new THREE.Mesh(new THREE.BoxGeometry(3, .12, 6), M(0x2a2f38, 0, { roughness: .8 })); deck.position.set(0, .86, -1);
+  const glass = new THREE.Mesh(new THREE.BoxGeometry(3.1, 1.1, .12), M(0x9fe8ff, .25, { transparent: true, opacity: .55, metalness: .6, roughness: .05 })); glass.position.set(0, 1.4, 2.2); glass.rotation.x = -.55;
+  const motor = new THREE.Mesh(new THREE.BoxGeometry(.9, 1.6, .9), M(0x14161c, 0, { metalness: .6, roughness: .3 })); motor.position.set(0, .9, -4.9);
+  const cowl = new THREE.Mesh(new THREE.BoxGeometry(.95, .25, .95), M(SKY, 1)); cowl.position.set(0, 1.75, -4.9);
+  boat.add(keel, hull, stripe, deck, glass, motor, cowl);
+  // wake: two foam ribbons + a center churn (shared additive sprite, no particles flood)
+  const foam = (x, rot) => { const w = sprite(STREAK, 0xe8fbff, 2.2, 34, .75); w.position.set(x, -.25, -21); w.rotation.y = Math.PI + rot; boat.add(w); return w; };
+  boat.userData.wake = [foam(-2.5, -.12), foam(2.5, .12), (() => { const c = sprite(ORB, 0xffffff, 5, 12, .8); c.position.set(0, -.2, -8); boat.add(c); return c; })()];
+  scene.add(boat); boat.visible = false; }
+// clouds for the overview descent (flat soft sprites, one shared texture)
+const cover = []; const clouds = new THREE.Group(); scene.add(clouds); clouds.visible = false;
+for (let i = 0; i < 26; i++) { const c = sprite(ORB, 0xffffff, 90 + Math.random() * 90, 60 + Math.random() * 60, .8); c.material.blending = THREE.NormalBlending; c.position.set((Math.random() - .5) * 360, 150 + Math.random() * 60, -80 + (Math.random() - .5) * 280); clouds.add(c); }
+for (let i = 0; i < 9; i++) { const c = sprite(ORB, 0xf4f8ff, 260, 200, .95); c.material.blending = THREE.NormalBlending; c.position.set((i % 3 - 1) * 110, 172 + i * 4, 60 + ((i / 3) | 0) * 60 - 60); clouds.add(c); cover.push(c); } // cover layer the camera dives into
+const deepSea = new THREE.Mesh(new THREE.PlaneGeometry(6000, 6000).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: 0x0b5f80 })); deepSea.position.y = -1.2; clouds.add(deepSea);
 
 // ===== isometric arena: muted dark floor so FX pop =====
 const ARENA = 40;
-const keep = new Set([ocean, pts, sky, zayn, boat]); const decor = scene.children.filter(o => !o.isLight && !keep.has(o));
+const keep = new Set([ocean, pts, sky, zayn, boat, clouds]); const decor = scene.children.filter(o => !o.isLight && !keep.has(o));
 const floorTex = canvasTex(512, 512, (x, w, h) => { x.fillStyle = '#56575c'; x.fillRect(0, 0, w, h);
   for (let i = 0; i < 900; i++) { x.fillStyle = `rgba(${Math.random() < .5 ? '255,255,255' : '0,0,0'},${Math.random() * .05})`; x.fillRect(Math.random() * w, Math.random() * h, 3 + Math.random() * 18, 3 + Math.random() * 18); }
   x.strokeStyle = 'rgba(77,184,255,.08)'; x.lineWidth = 2; for (let i = 0; i <= 8; i++) { x.beginPath(); x.moveTo(i * 64, 0); x.lineTo(i * 64, h); x.moveTo(0, i * 64); x.lineTo(w, i * 64); x.stroke(); } });
@@ -399,9 +413,11 @@ function setArena(on) { arena.visible = on; decor.forEach(o => o.visible = !on);
 function clearField() { enemies.forEach(e => e.mesh && scene.remove(e.mesh)); enemies.length = 0; gems.length = 0; nums.length = 0; decals.forEach(d => scene.remove(d.m)); decals.length = 0; }
 function startCine() {
   $('#title').classList.remove('on'); show('#title', false); show('#cine', true); show('#hud', false); show('#end', false);
-  S.mode = 'cine'; S.t = 0; boat.visible = true; boat.position.set(0, 0, 230); boat.rotation.y = Math.PI; setArena(false); clearField(); shield.visible = false;
-  boat.add(zayn); zayn.position.set(0, .9, -1); zayn.rotation.y = 0;
+  S.mode = 'over'; S.t = 0; boat.visible = false; setArena(false); clearField(); shield.visible = false; clouds.visible = true; scene.fog.far = 2000;
+  $('#cineText').textContent = 'HERTZFLOW ARCHIPELAGO'; $('#cineSub').textContent = 'Ember Dot · Moonleaf Oval · The h · Tidering Oval · Gold Dot';
 }
+function startBoat() { S.mode = 'cine'; S.t = 0; clouds.visible = false; scene.fog.far = 320; $('#cineText').textContent = 'ALMOST THERE';
+  boat.visible = true; boat.position.set(0, 0, 230); boat.rotation.y = Math.PI; boat.add(zayn); zayn.position.set(0, .9, -1); zayn.rotation.set(0, 0, 0); zayn.scale.set(1, 1, 1); }
 function landOnBeach() {
   if (S.mode !== 'cine') return; S.mode = 'fading'; fade(1);
   setTimeout(() => {
@@ -505,7 +521,7 @@ function use(p) { if (S.mode !== 'play' || S.cd[p] > 0) return; if (COST[p] && S
   S.en -= COST[p] || 0; S.cd[p] = CD[p] * (p === 'wave' && S.frenzy > 0 ? .55 : 1); act[p](); }
 
 // ===== input: WASD/stick move, mouse aims, auto-fire at nearest when no mouse =====
-addEventListener('keydown', e => { keys[e.code] = true; const m = { KeyQ: 'wave', KeyE: 'chain', KeyR: 'roar', Space: 'dodge' }[e.code]; if (m) { use(m); e.preventDefault(); } if (S.mode === 'cine' && (e.code === 'Enter' || e.code === 'Escape')) landOnBeach(); });
+addEventListener('keydown', e => { keys[e.code] = true; const m = { KeyQ: 'wave', KeyE: 'chain', KeyR: 'roar', Space: 'dodge' }[e.code]; if (m) { use(m); e.preventDefault(); } if (S.mode === 'over' && (e.code === 'Enter' || e.code === 'Escape')) { startBoat(); } else if (S.mode === 'cine' && (e.code === 'Enter' || e.code === 'Escape')) landOnBeach(); });
 addEventListener('keyup', e => keys[e.code] = false);
 document.querySelectorAll('.p').forEach(b => b.addEventListener('pointerdown', e => { e.stopPropagation(); use(b.dataset.p); }));
 const mouse = { x: 0, y: 0, on: false, down: false, ray: new THREE.Raycaster(), plane: new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), hit: new THREE.Vector3() };
@@ -521,7 +537,7 @@ $('.cards').innerHTML = Object.entries(CHARS).map(([id, c]) => `<div class="card
 document.querySelectorAll('.card.pick').forEach(el => el.onclick = () => { setChar(el.dataset.c); fade(1); setTimeout(() => { startCine(); fade(0); }, 600); });
 window.__pick = id => { setChar(id); startCine(); };
 setChar('zayn'); if ('ontouchstart' in window || navigator.maxTouchPoints > 0) document.body.classList.add('touch');
-$('#skip').onclick = landOnBeach;
+$('#skip').onclick = () => { if (S.mode === 'over') startBoat(); landOnBeach(); };
 $('#retry').onclick = () => { show('#end', false); fade(1); S.mode = 'clear'; const s0 = S.secStart; setTimeout(() => { Object.assign(S, s0); startSection(S.sec); }, 600); };
 $('#again').onclick = () => { show('#end', false); fade(1); setTimeout(() => { startCine(); fade(0); }, 600); };
 $('#menu').onclick = () => { show('#end', false); show('#hud', false); show('#title', true); S.mode = 'title'; setArena(false); clearField(); };
@@ -538,9 +554,14 @@ function tick(now) {
   pylons.forEach((p, i) => { p.rotation.y += dt * 2; p.position.y = 8.5 + Math.sin(S.t * 2 + i) * .4; });
 
   if (S.mode === 'title') { const r = 70; cam.fov = 60; cam.updateProjectionMatrix(); cam.position.set(Math.cos(S.t * .1) * r, 22, Math.sin(S.t * .1) * r); cam.lookAt(0, 3, 0); }
-  else if (S.mode === 'cine' || S.mode === 'fading') {
+  else if (S.mode === 'over' || S.mode === 'overfade') { // aerial overview: archipelago reads as the HertzFlow mark, camera dives through clouds
+    const k = Math.min(1, S.t / 5), e = k * k * (3 - 2 * k); cam.fov = 55; cam.updateProjectionMatrix();
+    cam.position.set(Math.sin(S.t * .15) * 20, 460 - e * 300, 120 - e * 40); cam.lookAt(10, 0, -95 + e * 30); const cv = Math.max(0, (k - .6) / .4); cover.forEach(c => c.material.opacity = cv * .95);
+    if (S.t > 4.4 && S.mode === 'over') { S.mode = 'overfade'; fade(1); setTimeout(() => { if (S.mode === 'overfade') { startBoat(); fade(0); } }, 700); }
+  }
+  else if (S.mode === 'cine' || S.mode === 'fading') { boat.userData.wake.forEach((w, i) => { w.material.opacity = (i < 2 ? .55 : .7) + Math.sin(S.t * 9 + i) * .15; });
     const k = Math.min(1, S.t / 13); boat.position.z = 230 - k * 190; boat.position.y = Math.sin(S.t * 6) * .25; boat.rotation.z = Math.sin(S.t * 2) * .06; boat.rotation.x = -.06;
-    burst(new THREE.Vector3(boat.position.x + (Math.random() - .5) * 3, .3, boat.position.z + 5), [0xffffff, 0xbff6ff], 6, 3, 2.5, 8);
+    burst(new THREE.Vector3(boat.position.x + (Math.random() - .5) * 3, .2, boat.position.z + 5), [0xffffff, 0xbff6ff], 2, 3, 2, 8);
     $('#cineSub').textContent = `Ember Dot · ${Math.max(0, (boat.position.z - 34) / 500).toFixed(2)} km`;
     const sw = Math.sin(S.t * .35) * 6;
     cam.position.set(boat.position.x + sw, 6 + Math.sin(S.t) * .4, boat.position.z + 14); cam.lookAt(boat.position.x, 3, boat.position.z - 20);
@@ -663,4 +684,4 @@ addEventListener('keydown', e => { if (e.code === 'KeyM') muteBtn.click(); });
 const unlock = () => { initAudio(); if (!muted) music.play().catch(() => {}); };
 ['pointerdown', 'keydown', 'touchstart'].forEach(t => addEventListener(t, unlock, { once: true, capture: true }));
 applyMusic();
-setInterval(() => setDuck(S.mode === 'title' ? .55 : S.mode === 'cine' ? .32 : .16), 250); // duck theme under battle SFX
+setInterval(() => setDuck(S.mode === 'title' || S.mode === 'over' || S.mode === 'overfade' ? .55 : S.mode === 'cine' ? .32 : .16), 250); // duck theme under battle SFX
