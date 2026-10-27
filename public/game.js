@@ -84,7 +84,7 @@ function stepParticles(dt) {
 }
 // expanding FX meshes (rings, flashes)
 const fx = [];
-function ring(p, col, max = 10, life = .5, y = .3) { const m = new THREE.Mesh(new THREE.TorusGeometry(1, .25, 8, 48), glow(col)); m.rotation.x = Math.PI / 2; m.position.set(p.x, y, p.z); scene.add(m); fx.push({ m, t: 0, life, max }); }
+function ring(p, col, max = 10, life = .5, y = .3, tube = .25) { const m = new THREE.Mesh(new THREE.TorusGeometry(1, tube, 8, 48), glow(col)); m.rotation.x = Math.PI / 2; m.position.set(p.x, y, p.z); scene.add(m); fx.push({ m, t: 0, life, max }); }
 function flash(p, col, max = 4, life = .25) { const m = new THREE.Mesh(new THREE.SphereGeometry(1, 16, 12), glow(col)); m.position.copy(p); scene.add(m); fx.push({ m, t: 0, life, max }); }
 function stepFx(dt) { for (let i = fx.length - 1; i >= 0; i--) { const f = fx[i]; f.t += dt; const k = f.t / f.life; f.m.scale.setScalar(.2 + k * f.max); f.m.material.opacity = (f.m.geometry.type === 'SphereGeometry' ? .45 : 1) * (1 - k); if (k >= 1) { scene.remove(f.m); f.m.geometry.dispose(); fx.splice(i, 1); } } }
 
@@ -116,7 +116,7 @@ function makeZayn() {
   // tiger head
   const head = new THREE.Mesh(new THREE.SphereGeometry(.72, 20, 14), fur); head.position.y = 3.85; head.scale.set(1, .95, 1);
   const ruff = new THREE.Mesh(new THREE.SphereGeometry(.62, 14, 8), M(0xfff3e0, 0, { roughness: 1 })); ruff.position.set(0, 3.45, .12); ruff.scale.set(1.25, .6, 1.05);
-  const mkEar = sx => { const e = new THREE.Mesh(new THREE.ConeGeometry(.24, .38, 6), M(0x1a120c)); e.position.set(sx * .5, 4.5, -.05); e.rotation.z = -sx * .35;
+  const mkEar = sx => { const e = new THREE.Mesh(new THREE.ConeGeometry(.32, .5, 6), M(0x1a120c)); e.position.set(sx * .56, 4.55, -.05); e.rotation.z = -sx * .35;
     const w = new THREE.Mesh(new THREE.CircleGeometry(.11, 8), M(0xffffff)); w.position.set(0, -.02, -.2); w.rotation.y = Math.PI; e.add(w); return e; };
   const muzzle = new THREE.Mesh(new THREE.SphereGeometry(.34, 12, 8), M(0xfff1dc, 0, { roughness: 1 })); muzzle.position.set(0, 3.62, .58); muzzle.scale.set(1.1, .7, .7);
   const nose = new THREE.Mesh(new THREE.SphereGeometry(.1, 8, 6), M(0x2a1410)); nose.position.set(0, 3.74, .82);
@@ -126,8 +126,9 @@ function makeZayn() {
     const arm = new THREE.Mesh(new THREE.BoxGeometry(.05, .07, .7), lensM); arm.position.set(sx * .66, .05, -.35); shades.add(arm); }
   const bar = new THREE.Mesh(new THREE.BoxGeometry(1.2, .07, .09), gold); bar.position.y = .12; shades.add(bar); shades.position.set(0, 3.98, .66);
   // gold cuban chain (instanced links)
-  const N = 22, chain = new THREE.InstancedMesh(new THREE.TorusGeometry(.085, .035, 5, 10), gold, N), o = new THREE.Object3D();
+  const N = 22, chain = new THREE.InstancedMesh(new THREE.TorusGeometry(.11, .05, 5, 10), gold, N), o = new THREE.Object3D();
   for (let i = 0; i < N; i++) { const a = i / N * Math.PI * 2; o.position.set(Math.sin(a) * .62, 3.2 - Math.max(0, Math.cos(a)) * .32, Math.cos(a) * .55); o.rotation.set(0, a, i % 2 ? Math.PI / 2 : 0); o.updateMatrix(); chain.setMatrixAt(i, o.matrix); }
+  const collar = new THREE.Mesh(new THREE.TorusGeometry(.66, .09, 6, 24), gold); collar.rotation.x = Math.PI / 2; collar.position.y = 3.12;
   const pendant = new THREE.Mesh(new THREE.OctahedronGeometry(.16, 0), gold); pendant.position.set(0, 2.78, .75);
   // tail (stripey, curves down)
   const tail = new THREE.Group(); tail.position.set(0, 1.55, -.6); const tm = new THREE.MeshStandardMaterial({ map: tailTex, roughness: .95 });
@@ -148,7 +149,7 @@ function makeZayn() {
   add(new THREE.ConeGeometry(.16, .5, 6), gold, 0, 3.7, .06);                        // spear tip
   add(new THREE.BoxGeometry(.4, 1.2, .1), gold, 0, .6, .25);                         // gold side plate
   for (const sx of [-1, 1]) { const f = add(new THREE.ConeGeometry(.12, .9, 4), gold, sx * .28, 1.1, 0); f.rotation.z = sx * -.6; } // fins
-  add(new THREE.BoxGeometry(.3, .9, .5), gunM, 0, -1.25, -.12);                      // stock
+  add(new THREE.BoxGeometry(.36, .9, .6), gunM, 0, -1.25, -.12);                      // stock
   add(new THREE.BoxGeometry(.18, .5, .14), gunM, 0, -.2, -.35);                      // grip
   const core = add(new THREE.IcosahedronGeometry(.24, 0), M(0xffd45a, 3), 0, .25, .32);  // crown core
   for (let i = 0; i < 3; i++) add(new THREE.ConeGeometry(.06, .22, 4), M(0xffd45a, 2.5), (i - 1) * .12, .25 + (i === 1 ? .32 : .24), .32);
@@ -157,7 +158,7 @@ function makeZayn() {
   armR.add(rifle);
   const bl = new THREE.PointLight(0xffc83d, 5, 8); bl.position.set(0, -1.3, 1.6); armR.add(bl);
   const shadow = new THREE.Mesh(new THREE.CircleGeometry(1.2, 20), new THREE.MeshBasicMaterial({ color: 0, transparent: true, opacity: .3 })); shadow.rotation.x = -Math.PI / 2; shadow.position.y = .05;
-  g.add(legL, legR, body, hem, trim, head, ruff, mkEar(-1), mkEar(1), muzzle, nose, shades, chain, pendant, tail, armL, armR, shadow);
+  g.add(legL, legR, body, hem, trim, head, ruff, mkEar(-1), mkEar(1), muzzle, nose, shades, chain, collar, pendant, tail, armL, armR, shadow);
   g.userData = { legL, legR, armR, blade, core, tail }; g.scale.setScalar(1.6); return g;
 }
 const zayn = makeZayn(); scene.add(zayn);
@@ -223,15 +224,15 @@ function decal(p, r, life) { const m = new THREE.Mesh(new THREE.CircleGeometry(1
   const rim = new THREE.Mesh(new THREE.RingGeometry(.92, 1, 40), glow(0xff2a5a)); m.add(rim); decals.push({ m, t: 0, life }); return m; }
 
 // ===== gems (glowing yellow XP) =====
-const MAXG = 500, gemIM = new THREE.InstancedMesh(new THREE.OctahedronGeometry(.38, 0), new THREE.MeshBasicMaterial({ color: 0xffe14a }), MAXG);
+const MAXG = 500, gemIM = new THREE.InstancedMesh(new THREE.OctahedronGeometry(.53, 0), new THREE.MeshBasicMaterial({ color: 0xffe14a }), MAXG);
 gemIM.count = 0; gemIM.frustumCulled = false; scene.add(gemIM);
-const gemGlow = new THREE.Points(new THREE.BufferGeometry(), new THREE.PointsMaterial({ size: 2.4, map: dot, color: 0xffc82a, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }));
+const gemGlow = new THREE.Points(new THREE.BufferGeometry(), new THREE.PointsMaterial({ size: 3.6, map: dot, color: SKY, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }));
 const gemGlowPos = new Float32Array(MAXG * 3); gemGlow.geometry.setAttribute('position', new THREE.BufferAttribute(gemGlowPos, 3)); gemGlow.frustumCulled = false; scene.add(gemGlow);
 const gems = [];
 
 // ===== shield bubble =====
 const shield = new THREE.Mesh(new THREE.SphereGeometry(3.2, 24, 16), new THREE.MeshBasicMaterial({ color: 0x3ef2ff, transparent: true, opacity: .22, blending: THREE.AdditiveBlending, depthWrite: false }));
-const shieldRim = new THREE.Mesh(new THREE.TorusGeometry(3.2, .12, 6, 48), glow(0x9ffcff)); shieldRim.rotation.x = Math.PI / 2; shield.add(shieldRim);
+const shieldRim = new THREE.Mesh(new THREE.TorusGeometry(3.2, .3, 6, 48), glow(0xffc83d)); shieldRim.rotation.x = Math.PI / 2; shieldRim.material.opacity = 1; shieldRim.position.y = -1.6; shield.add(shieldRim);
 shield.visible = false; scene.add(shield);
 
 // ===== 2D overlay: thin red HP bars + bouncy white damage numbers =====
@@ -250,7 +251,7 @@ function drawOverlay(dt) {
   for (let i = nums.length - 1; i >= 0; i--) { const n = nums[i]; n.t += dt; if (n.t > .9) { nums.splice(i, 1); continue; }
     n.vy += 900 * dt; const [sx, sy] = toScreen(n, n.y); n.ox = (n.ox || 0) + n.vx * dt; n.oy = Math.min((n.oy || 0) + n.vy * dt, 10);
     const pop = n.t < .08 ? 1 + (.08 - n.t) * 10 : 1, a = n.t > .6 ? (.9 - n.t) / .3 : 1;
-    ox.globalAlpha = a; ox.font = `900 ${(n.big ? 30 : 20) * pop}px system-ui`; ox.lineWidth = 4; ox.strokeStyle = '#000'; ox.strokeText(n.txt, sx + n.ox, sy + n.oy); ox.fillStyle = n.col; ox.fillText(n.txt, sx + n.ox, sy + n.oy); }
+    ox.globalAlpha = a; ox.font = `900 ${(n.big ? 45 : 30) * pop}px system-ui`; ox.lineWidth = 7; ox.strokeStyle = '#05060a'; ox.strokeText(n.txt, sx + n.ox, sy + n.oy); ox.fillStyle = n.col; ox.fillText(n.txt, sx + n.ox, sy + n.oy); }
   ox.globalAlpha = 1;
 }
 
@@ -313,7 +314,7 @@ function damage(e, d, kbv) {
 }
 function kill(e) { const i = enemies.indexOf(e); if (i < 0) return; enemies.splice(i, 1); if (e.mesh) scene.remove(e.mesh);
   const p = e.pos.clone().setY(1.2), big = e.type === 'brute';
-  burst(p, [0xff1450, 0xff5a8a, 0xffffff, 0xffc83d], big ? 160 : 28, big ? 20 : 11, big ? 12 : 7); flash(p, 0xff3c6e, big ? 9 : 2.6, .22); if (big) { ring(e.pos, 0xff2a5a, 16, .6); S.shake = .6; }
+  burst(p, [0xff1450, 0xff5a8a, 0xffffff, 0xffc83d], big ? 160 : (S.quiet ? 6 : 28), big ? 20 : 11, big ? 12 : 7); flash(p, 0xff3c6e, big ? 9 : 2.6, .22); if (big) { ring(e.pos, 0xff2a5a, 16, .6); S.shake = .6; }
   for (let k = 0; k < e.T.xp; k++) if (gems.length < MAXG) gems.push({ p: e.pos.clone().add(new THREE.Vector3((Math.random() - .5) * (big ? 4 : .6), .9, (Math.random() - .5) * (big ? 4 : .6))), v: 0, t: Math.random() * 6 });
   S.kills++; S.score += big ? 1000 : 50; S.en = Math.min(100, S.en + (big ? 20 : 1.5)); S.shake = Math.max(S.shake, .12); }
 const waves = [], ropes = [];
@@ -328,9 +329,9 @@ const act = {
     const rope = new THREE.Mesh(new THREE.CylinderGeometry(.3, .3, len, 6), M(0xffd44d, 2, { transparent: true })); rope.position.copy(st).lerp(end.clone().setY(1.5), .5); rope.lookAt(end.clone().setY(1.5)); rope.rotateX(Math.PI / 2); scene.add(rope); ropes.push({ m: rope, t: .4 });
     boom(end, 0xffc83d, 7, 40, 14); ring(end, 0xff8a1e, 10, .5, 1.2);
     S.shake = .4; banner('GOLD CHAIN!', '#ffc83d'); },
-  roar() { const p = zayn.position.clone(); ring(p, 0xff3cac, 22, .7, .5); ring(p, SKY, 28, .9, .3); ring(p, 0xffc83d, 16, .5, 1.5); flash(p.clone().setY(2), 0xffffff, 6, .2);
-    burst(p.clone().setY(1), [0xff3cac, 0xffc83d, SKY, 0xffffff], 260, 30, 12);
-    for (const e of [...enemies]) { const d = e.pos.clone().sub(p).setY(0); if (d.length() < 15) { e.stun = 2; damage(e, 30, d.normalize().multiplyScalar(22)); } }
+  roar() { const p = zayn.position.clone(); ring(p, 0xffc83d, 16, .45, .3, .05); ring(p, SKY, 12, .3, .3, .04); flash(p.clone().setY(2), 0xffffff, 3, .12);
+    burst(p.clone().setY(1), [0xffc83d, SKY], 50, 22, 4); S.quiet = true;
+    for (const e of [...enemies]) { const d = e.pos.clone().sub(p).setY(0); if (d.length() < 15) { e.stun = 2; damage(e, 30, d.normalize().multiplyScalar(22)); } } S.quiet = false;
     S.buff = 5; S.shake = .8; banner('ROAR · SHIELD UP!', '#3ef2ff'); },
   dodge() { S.dodge = .2; S.iframes = .5; ring(zayn.position, 0x3ef2ff, 4, .3); },
 };
@@ -434,7 +435,7 @@ function tick(now) {
       if (d < 7 || gm.v) { gm.v = Math.min(40, (gm.v || 8) + dt * 60); gm.p.x += dx / d * gm.v * dt; gm.p.z += dz / d * gm.v * dt; }
       if (d < 1.4 && S.mode === 'play') { gems.splice(i, 1); S.xp++; S.score += 10; S.en = Math.min(100, S.en + 1.2); continue; } }
     for (const gm of gems) { o3.position.set(gm.p.x, .9 + Math.sin(gm.t * 4) * .2, gm.p.z); o3.rotation.set(0, gm.t * 3, 0); o3.scale.setScalar(1); o3.updateMatrix(); gemIM.setMatrixAt(g, o3.matrix); gemGlowPos[g * 3] = o3.position.x; gemGlowPos[g * 3 + 1] = o3.position.y; gemGlowPos[g * 3 + 2] = o3.position.z; g++; }
-    gemIM.count = g; gemIM.instanceMatrix.needsUpdate = true; gemGlow.geometry.setDrawRange(0, g); gemGlow.geometry.attributes.position.needsUpdate = true;
+    gemIM.count = g; gemIM.instanceMatrix.needsUpdate = true; gemGlow.geometry.setDrawRange(0, g); gemGlow.material.opacity = .65 + Math.sin(S.t * 6) * .3; gemGlow.geometry.attributes.position.needsUpdate = true;
     // shield bubble (dodge i-frames / ROAR buff)
     const sh = S.iframes > 0 || S.buff > 0; shield.visible = sh && S.mode === 'play'; if (sh) { shield.position.set(zp.x, 2.4, zp.z); shield.scale.setScalar(1 + Math.sin(S.t * 10) * .04); shield.material.opacity = S.iframes > 0 ? .35 : .2; shieldRim.rotation.z += dt * 2; }
     // fixed isometric follow camera
