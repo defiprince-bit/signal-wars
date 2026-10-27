@@ -40,3 +40,6 @@ Shared controls: WAVE (Q/auto) · signature skill (E) · ultimate (R, 30 Flow) �
 | Chado | 90 / 17 | short wide sunset slash | Sunset Twin Slash dash-through | Shadow Step blink + double burst |
 | Kael | 105 / 15.5 | heavy blue crescent | Moon Cleave around self | Moonflare Frenzy: fire-rate/speed/damage up 5s |
 | Warden | 140 / 13.5 | green crescent | Green Wing Barrage (5 strikes) | Bulwark shield bubble |
+
+**Next polish:** title cards use letter tiles for the MVP; replace with mini silhouettes rendered from the character stills in `public/assets/characters/`.
+**Zayn combat read:** in the arena his fur/shirt/sleeves fold to a dark mass; only ears, gold chain collar and weapon tip stay gold (full colors on title/boat).

@@ -126,7 +126,7 @@ function makeZayn() {
   // tiger head
   const head = new THREE.Mesh(new THREE.SphereGeometry(.72, 20, 14), fur); head.position.y = 3.85; head.scale.set(1, .95, 1);
   const ruff = new THREE.Mesh(new THREE.SphereGeometry(.62, 14, 8), M(0xfff3e0, 0, { roughness: 1 })); ruff.position.set(0, 3.45, .12); ruff.scale.set(1.25, .6, 1.05);
-  const mkEar = sx => { const e = new THREE.Mesh(new THREE.ConeGeometry(.32, .5, 6), M(0x1a120c)); e.position.set(sx * .56, 4.55, -.05); e.rotation.z = -sx * .35;
+  const earM = M(0x1a120c); const mkEar = sx => { const e = new THREE.Mesh(new THREE.ConeGeometry(.32, .5, 6), earM); e.position.set(sx * .56, 4.55, -.05); e.rotation.z = -sx * .35;
     const w = new THREE.Mesh(new THREE.CircleGeometry(.11, 8), M(0xffffff)); w.position.set(0, -.02, -.2); w.rotation.y = Math.PI; e.add(w); return e; };
   const muzzle = new THREE.Mesh(new THREE.SphereGeometry(.34, 12, 8), M(0xfff1dc, 0, { roughness: 1 })); muzzle.position.set(0, 3.62, .58); muzzle.scale.set(1.1, .7, .7);
   const nose = new THREE.Mesh(new THREE.SphereGeometry(.1, 8, 6), M(0x2a1410)); nose.position.set(0, 3.74, .82);
@@ -169,7 +169,11 @@ function makeZayn() {
   const bl = new THREE.PointLight(0xffc83d, 5, 8); bl.position.set(0, -1.3, 1.6); armR.add(bl);
   const shadow = new THREE.Mesh(new THREE.CircleGeometry(1.2, 20), new THREE.MeshBasicMaterial({ color: 0, transparent: true, opacity: .3 })); shadow.rotation.x = -Math.PI / 2; shadow.position.y = .05;
   g.add(legL, legR, body, hem, trim, head, ruff, mkEar(-1), mkEar(1), muzzle, nose, shades, chain, collar, pendant, tail, armL, armR, shadow);
-  g.userData = { legL, legR, armR, blade, core, tail }; g.scale.setScalar(1.6); return g;
+  const shirtM = body.material[0], dark = [[fur, 0x2a2224], [shirtM, 0x17161b], [slv, 0x17161b], [tm, 0x2a2224], [ruff.material, 0x34302e], [muzzle.material, 0x34302e]];
+  dark.forEach(([m]) => { m.userData.map = m.map; m.userData.col = m.color.getHex(); });
+  const combat = on => { dark.forEach(([m, c]) => { m.map = on ? null : m.userData.map; m.color.setHex(on ? c : m.userData.col); m.needsUpdate = true; });
+    earM.color.setHex(on ? 0xffc83d : 0x1a120c); earM.emissive.setHex(on ? 0xffc83d : 0); earM.emissiveIntensity = on ? .6 : 0; }; // combat read: dark mass + gold ears/collar/tip
+  g.userData = { legL, legR, armR, blade, core, tail, combat }; g.scale.setScalar(1.6); return g;
 }
 // ===== roster: every Signal Keeper is playable (fan build). `zayn` is the player rig; the model inside swaps. =====
 const CHARS = {
@@ -365,7 +369,7 @@ const gems = [];
 
 // ===== shield bubble =====
 const shield = new THREE.Mesh(new THREE.SphereGeometry(3.2, 24, 16), new THREE.MeshBasicMaterial({ color: 0x3ef2ff, transparent: true, opacity: .22, blending: THREE.AdditiveBlending, depthWrite: false }));
-const shieldRim = new THREE.Mesh(new THREE.TorusGeometry(3.2, .3, 6, 48), glow(0xffc83d)); shieldRim.rotation.x = Math.PI / 2; shieldRim.material.opacity = 1; shieldRim.position.y = -1.6; shield.add(shieldRim);
+const shieldRim = new THREE.Mesh(new THREE.TorusGeometry(3.2, .3, 6, 48), glow(0xffc83d)); shieldRim.rotation.x = Math.PI / 2; shieldRim.material.opacity = 1; shieldRim.position.y = -1.6; shieldRim.visible = false; shield.add(shieldRim);
 shield.visible = false; scene.add(shield);
 
 // ===== 2D overlay: thin red HP bars + bouncy white damage numbers =====
@@ -413,7 +417,7 @@ const banner = (t, c = '#fff') => { const b = $('#banner'); b.textContent = t; b
 const fade = (on) => $('#fade').style.opacity = on ? 1 : 0;
 const show = (id, on) => $(id).classList.toggle('hide', !on);
 const BG_DAY = new THREE.Color(0xffc49a), BG_DARK = new THREE.Color(0x0a0c12);
-function setArena(on) { arena.visible = on; decor.forEach(o => o.visible = !on); ocean.visible = !on; scene.background = on ? BG_DARK : BG_DAY; scene.fog.color.set(on ? 0x0a0c12 : 0xffd2a8); scene.fog.near = on ? 60 : 90; scene.fog.far = on ? 140 : 320; sky.visible = !on; }
+function setArena(on) { const zc = MODELS.zayn && MODELS.zayn.userData.combat; if (zc) zc(on); arena.visible = on; decor.forEach(o => o.visible = !on); ocean.visible = !on; scene.background = on ? BG_DARK : BG_DAY; scene.fog.color.set(on ? 0x0a0c12 : 0xffd2a8); scene.fog.near = on ? 60 : 90; scene.fog.far = on ? 140 : 320; sky.visible = !on; }
 
 function clearField() { enemies.forEach(e => e.mesh && scene.remove(e.mesh)); enemies.length = 0; gems.length = 0; nums.length = 0; decals.forEach(d => scene.remove(d.m)); decals.length = 0; }
 function startCine() {
@@ -516,7 +520,7 @@ const act = {
       if (md === 'pulse') { hitAll(14, 16, 14, 1); for (const k of [1, 2]) setTimeout(() => { const q = zayn.position.clone().setY(0); ring(q, c, 16, .4, .3, .05); for (const e of [...enemies]) { const d = e.pos.clone().sub(q).setY(0); if (d.length() < 15) { e.stun = 1; damage(e, 16, d.normalize().multiplyScalar(12)); } } sfx('boom'); }, k * 260); }
       if (md === 'blink') { const f = aimDir(), q = p.clone().add(f.multiplyScalar(13)); boom(p, c, 6, 35, 14); zayn.position.set(q.x, .3, q.z); S.iframes = 1; boom(q, c, 6, 35, 14); }
       if (md === 'frenzy') { S.frenzy = 5; S.hp = Math.min(CH.hp, S.hp + 15); hitAll(10, 20, 16, .6); }
-      S.quiet = false; return; } ring(p, 0xffc83d, 16, .45, .3, .05); ring(p, SKY, 12, .3, .3, .04); flash(p.clone().setY(2), 0xffffff, 3, .12);
+      S.quiet = false; return; } ring(p, 0x3ef2ff, 16, .45, .3, .05); ring(p, SKY, 12, .3, .3, .04); flash(p.clone().setY(2), 0xffffff, 3, .12);
     burst(p.clone().setY(1), [0xffc83d, SKY], 50, 22, 4); S.quiet = true;
     for (const e of [...enemies]) { const d = e.pos.clone().sub(p).setY(0); if (d.length() < 15) { e.stun = 2; damage(e, 30, d.normalize().multiplyScalar(22)); } } S.quiet = false;
     S.buff = 5; S.shake = .8; banner(CH.roar.name + '!', '#3ef2ff'); },
@@ -648,7 +652,7 @@ function tick(now) {
     for (const gm of gems) { o3.position.set(gm.p.x, .9 + Math.sin(gm.t * 4) * .2, gm.p.z); o3.rotation.set(0, gm.t * 3, 0); o3.scale.setScalar(1); o3.updateMatrix(); gemIM.setMatrixAt(g, o3.matrix); gemGlowPos[g * 3] = o3.position.x; gemGlowPos[g * 3 + 1] = o3.position.y; gemGlowPos[g * 3 + 2] = o3.position.z; g++; }
     gemIM.count = g; gemIM.instanceMatrix.needsUpdate = true; gemGlow.geometry.setDrawRange(0, g); gemGlow.material.opacity = .65 + Math.sin(S.t * 6) * .3; gemGlow.geometry.attributes.position.needsUpdate = true;
     // shield bubble (dodge i-frames / ROAR buff)
-    const sh = S.iframes > 0 || S.buff > 0; shield.visible = sh && S.mode === 'play'; if (sh) { shield.position.set(zp.x, 2.4, zp.z); shield.scale.setScalar(1 + Math.sin(S.t * 10) * .04); shield.material.opacity = S.iframes > 0 ? .35 : .2; shieldRim.rotation.z += dt * 2; }
+    const sh = S.iframes > 0 || S.buff > 0; shield.visible = sh && S.mode === 'play'; if (sh) { shield.position.set(zp.x, 2.4, zp.z); shield.scale.setScalar(1 + Math.sin(S.t * 10) * .04); shield.material.opacity = S.iframes > 0 ? .38 : .3; shieldRim.rotation.z += dt * 2; }
     // fixed isometric follow camera
     const narrow = cam.aspect < 1; if (cam.fov !== (narrow ? 55 : 42)) { cam.fov = narrow ? 55 : 42; cam.updateProjectionMatrix(); }
     v3.copy(zp).add(ISO); v3.z -= 6; cam.position.lerp(v3, Math.min(1, dt * 6)); S.shake = Math.max(0, S.shake - dt);

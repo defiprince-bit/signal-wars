@@ -77,3 +77,4 @@ body.touch #pw{left:auto;right:14px;top:auto;bottom:70px;transform:none;display:
 body.touch .p,body.touch .p.big{width:52px;height:52px}body.touch .p kbd{display:none}
 @media (max-width:600px){.p,.p.big{width:48px;height:48px}}
 body:not(.touch) #stick{display:none}
+#hud #help{display:none}
