@@ -87,30 +87,77 @@ function ring(p, col, max = 10, life = .5, y = .3) { const m = new THREE.Mesh(ne
 function flash(p, col, max = 4, life = .25) { const m = new THREE.Mesh(new THREE.SphereGeometry(1, 16, 12), glow(col)); m.position.copy(p); scene.add(m); fx.push({ m, t: 0, life, max }); }
 function stepFx(dt) { for (let i = fx.length - 1; i >= 0; i--) { const f = fx[i]; f.t += dt; const k = f.t / f.life; f.m.scale.setScalar(.2 + k * f.max); f.m.material.opacity = (f.m.geometry.type === 'SphereGeometry' ? .45 : 1) * (1 - k); if (k >= 1) { scene.remove(f.m); f.m.geometry.dispose(); fx.splice(i, 1); } } }
 
-// ===== Zayn =====
+// ===== Zayn (low-poly + canvas textures; budget in docs/ART_BUDGET.md) =====
+function canvasTex(w, h, draw) { const c = document.createElement('canvas'); c.width = w; c.height = h; draw(c.getContext('2d'), w, h); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; return t; }
+const furTex = canvasTex(512, 256, (x, w, h) => { const g = x.createLinearGradient(0, 0, 0, h); g.addColorStop(0, '#ff8a1e'); g.addColorStop(1, '#ffa940'); x.fillStyle = g; x.fillRect(0, 0, w, h);
+  x.fillStyle = '#fff3e0'; x.fillRect(0, h * .78, w, h * .22); x.fillStyle = '#120c08';
+  for (let i = 0; i < 9; i++) { const cx = (i + .5) * w / 9; x.beginPath(); x.moveTo(cx - 14, h * .12); x.lineTo(cx + 10, h * (.5 + (i % 2) * .12)); x.lineTo(cx + 14, h * .12); x.fill(); } });
+const shirtTex = canvasTex(512, 256, (x, w, h) => { x.fillStyle = '#111116'; x.fillRect(0, 0, w, h); x.fillStyle = '#ffc83d'; x.font = 'bold 64px Arial Black, sans-serif'; x.textAlign = 'center';
+  for (const px of [0, .5, 1]) x.fillText('ZAYN', w * px, h * .5); x.fillStyle = '#4DB8FF'; x.fillRect(0, h * .9, w, h * .05); });
+const sleeveTex = canvasTex(64, 256, (x, w, h) => { x.fillStyle = '#111116'; x.fillRect(0, 0, w, h); x.fillStyle = '#f2efe6'; for (let i = 0; i < 6; i++) x.fillRect(0, 20 + i * 30, w * .3, 14); });
+const tailTex = canvasTex(64, 256, (x, w, h) => { x.fillStyle = '#ef8423'; x.fillRect(0, 0, w, h); x.fillStyle = '#120c08'; for (let i = 0; i < 8; i++) x.fillRect(0, i * 32, w, 13); });
 function makeZayn() {
-  const g = new THREE.Group(), fur = M(0xff8a1e), blk = M(0x15151c);
-  const legL = new THREE.Mesh(new THREE.BoxGeometry(.55, 1.4, .55), blk), legR = legL.clone(); legL.position.set(-.35, .7, 0); legR.position.set(.35, .7, 0);
-  const body = new THREE.Mesh(new THREE.BoxGeometry(1.5, 1.6, .9), blk); body.position.y = 2.2;
-  const name = new THREE.Mesh(new THREE.BoxGeometry(1.2, .32, .04), M(0xffc83d, .8)); name.position.set(0, 2.45, -.47);
-  const hood = new THREE.Mesh(new THREE.BoxGeometry(1.35, .8, .5), M(0x22222c)); hood.position.set(0, 3.15, -.55); g.add(hood);
-  const trim = new THREE.Mesh(new THREE.BoxGeometry(1.55, .12, .95), M(SKY, 1)); trim.position.y = 1.45; g.add(trim); // on back (camera sees back)
-  const head = new THREE.Mesh(new THREE.BoxGeometry(1.25, 1.15, 1.1), fur); head.position.y = 3.6;
-  for (let i = 0; i < 3; i++) { const s = new THREE.Mesh(new THREE.BoxGeometry(1.27, .1, 1.12), blk); s.position.y = 3.35 + i * .28; g.add(s); }
-  const earL = new THREE.Mesh(new THREE.ConeGeometry(.22, .4, 4), fur), earR = earL.clone(); earL.position.set(-.45, 4.3, 0); earR.position.set(.45, 4.3, 0);
-  const shades = new THREE.Mesh(new THREE.BoxGeometry(1.45, .3, 1.2), M(0x050505, 0, { metalness: 1, roughness: .1 })); shades.position.set(0, 3.75, .02);
-  const muzzle = new THREE.Mesh(new THREE.BoxGeometry(.6, .35, .2), M(0xfff1dc)); muzzle.position.set(0, 3.3, .58);
-  const chain = new THREE.Mesh(new THREE.TorusGeometry(.85, .16, 8, 24), M(0xffc83d, .9, { metalness: 1, roughness: .2 })); chain.rotation.x = Math.PI / 2.2; chain.position.y = 2.95;
-  const armL = new THREE.Mesh(new THREE.BoxGeometry(.45, 1.4, .45), blk); armL.position.set(-.98, 2.2, 0);
-  const armR = new THREE.Group(); armR.position.set(.98, 2.9, 0);
-  const arm = new THREE.Mesh(new THREE.BoxGeometry(.45, 1.4, .45), blk); arm.position.y = -.7; armR.add(arm);
-  const blade = new THREE.Mesh(new THREE.BoxGeometry(.3, 5.5, .8), M(0xbff0ff, 2.2)); blade.position.set(.4, -.2, 2.6); blade.rotation.x = Math.PI / 3.2; blade.rotation.z = -.35; armR.add(blade);
-  const halo = new THREE.Mesh(new THREE.BoxGeometry(.8, 6, 1.6), glow(SKY)); halo.material.opacity = .45; halo.position.copy(blade.position); halo.rotation.copy(blade.rotation); armR.add(halo);
-  const bl = new THREE.PointLight(SKY, 6, 9); bl.position.set(0, -1.4, 3); armR.add(bl);
-  const hilt = new THREE.Mesh(new THREE.BoxGeometry(.7, .2, .2), M(0xffc83d, .5)); hilt.position.set(0, -1.4, .05); armR.add(hilt);
-  const shadow = new THREE.Mesh(new THREE.CircleGeometry(1.2, 24), new THREE.MeshBasicMaterial({ color: 0, transparent: true, opacity: .3 })); shadow.rotation.x = -Math.PI / 2; shadow.position.y = .05;
-  g.add(legL, legR, body, name, head, earL, earR, shades, muzzle, chain, armL, armR, shadow);
-  g.userData = { legL, legR, armR, blade }; g.scale.setScalar(1.6); return g;
+  const g = new THREE.Group(), blk = M(0x16161c, 0, { roughness: .85 }), pant = M(0x1c1d22, 0, { roughness: .9 });
+  const gold = M(0xffc83d, .9, { metalness: 1, roughness: .25 }), fur = new THREE.MeshStandardMaterial({ map: furTex, roughness: .95 });
+  const cap = (r, l, m) => new THREE.Mesh(new THREE.CapsuleGeometry(r, l, 3, 10), m);
+  // legs: cargo pants + gold/black kicks
+  const mkLeg = sx => { const p = new THREE.Group(); p.position.set(sx, 1.45, 0); const l = cap(.3, .95, pant); l.position.y = -.7; p.add(l);
+    const pocket = new THREE.Mesh(new THREE.BoxGeometry(.12, .4, .32), pant); pocket.position.set(sx * 1.05, -.6, 0); p.add(pocket);
+    const crown = new THREE.Mesh(new THREE.OctahedronGeometry(.07, 0), gold); crown.position.set(sx * 1.25, -.55, 0); p.add(crown);
+    const shoe = new THREE.Mesh(new THREE.BoxGeometry(.5, .32, .85), blk); shoe.position.set(0, -1.32, .12); p.add(shoe);
+    const sole = new THREE.Mesh(new THREE.BoxGeometry(.52, .1, .88), M(0xf3ead6)); sole.position.set(0, -1.48, .12); p.add(sole);
+    const swoosh = new THREE.Mesh(new THREE.BoxGeometry(.53, .1, .5), gold); swoosh.position.set(0, -1.28, .1); p.add(swoosh); return p; };
+  const legL = mkLeg(-.36), legR = mkLeg(.36);
+  // torso: black crewneck with ZAYN print
+  const body = new THREE.Mesh(new THREE.CylinderGeometry(.82, .72, 1.75, 14, 1), [new THREE.MeshStandardMaterial({ map: shirtTex, roughness: .85 }), blk, blk]); body.position.y = 2.35;
+  const hem = new THREE.Mesh(new THREE.TorusGeometry(.73, .09, 6, 16), blk); hem.rotation.x = Math.PI / 2; hem.position.y = 1.5;
+  const trim = new THREE.Mesh(new THREE.TorusGeometry(.75, .05, 6, 20), M(SKY, 1.4)); trim.rotation.x = Math.PI / 2; trim.position.y = 1.62;
+  // tiger head
+  const head = new THREE.Mesh(new THREE.SphereGeometry(.72, 20, 14), fur); head.position.y = 3.85; head.scale.set(1, .95, 1);
+  const ruff = new THREE.Mesh(new THREE.SphereGeometry(.62, 14, 8), M(0xfff3e0, 0, { roughness: 1 })); ruff.position.set(0, 3.45, .12); ruff.scale.set(1.25, .6, 1.05);
+  const mkEar = sx => { const e = new THREE.Mesh(new THREE.ConeGeometry(.24, .38, 6), M(0x1a120c)); e.position.set(sx * .5, 4.5, -.05); e.rotation.z = -sx * .35;
+    const w = new THREE.Mesh(new THREE.CircleGeometry(.11, 8), M(0xffffff)); w.position.set(0, -.02, -.2); w.rotation.y = Math.PI; e.add(w); return e; };
+  const muzzle = new THREE.Mesh(new THREE.SphereGeometry(.34, 12, 8), M(0xfff1dc, 0, { roughness: 1 })); muzzle.position.set(0, 3.62, .58); muzzle.scale.set(1.1, .7, .7);
+  const nose = new THREE.Mesh(new THREE.SphereGeometry(.1, 8, 6), M(0x2a1410)); nose.position.set(0, 3.74, .82);
+  // Wayfarers: two trapezoid lenses + bar, wraps sides so it reads from behind
+  const lensM = M(0x050507, 0, { metalness: 1, roughness: .08 }), shades = new THREE.Group();
+  for (const sx of [-1, 1]) { const l = new THREE.Mesh(new THREE.BoxGeometry(.48, .26, .08), lensM); l.position.set(sx * .3, 0, 0); l.rotation.y = sx * .18; shades.add(l);
+    const arm = new THREE.Mesh(new THREE.BoxGeometry(.05, .07, .7), lensM); arm.position.set(sx * .66, .05, -.35); shades.add(arm); }
+  const bar = new THREE.Mesh(new THREE.BoxGeometry(1.2, .07, .09), gold); bar.position.y = .12; shades.add(bar); shades.position.set(0, 3.98, .66);
+  // gold cuban chain (instanced links)
+  const N = 22, chain = new THREE.InstancedMesh(new THREE.TorusGeometry(.085, .035, 5, 10), gold, N), o = new THREE.Object3D();
+  for (let i = 0; i < N; i++) { const a = i / N * Math.PI * 2; o.position.set(Math.sin(a) * .62, 3.2 - Math.max(0, Math.cos(a)) * .32, Math.cos(a) * .55); o.rotation.set(0, a, i % 2 ? Math.PI / 2 : 0); o.updateMatrix(); chain.setMatrixAt(i, o.matrix); }
+  const pendant = new THREE.Mesh(new THREE.OctahedronGeometry(.16, 0), gold); pendant.position.set(0, 2.78, .75);
+  // tail (stripey, curves down)
+  const tail = new THREE.Group(); tail.position.set(0, 1.55, -.6); const tm = new THREE.MeshStandardMaterial({ map: tailTex, roughness: .95 });
+  { let par = tail; for (let i = 0; i < 4; i++) { const s = new THREE.Group(); s.position.y = i ? -.45 : 0; s.rotation.x = i ? .3 : .55; const c = cap(.13 - i * .01, .36, tm); c.position.y = -.22; s.add(c); par.add(s); par = s; }
+    const tip = new THREE.Mesh(new THREE.SphereGeometry(.15, 8, 6), M(0x120c08)); tip.position.y = -.55; par.add(tip); }
+  // arms (striped sleeves)
+  const slv = new THREE.MeshStandardMaterial({ map: sleeveTex, roughness: .85 });
+  const armL = cap(.22, 1.05, slv); armL.position.set(-.98, 2.35, .25); armL.rotation.set(-.9, 0, .35);
+  const armR = new THREE.Group(); armR.position.set(.95, 2.95, 0);
+  const arm = cap(.22, 1.05, slv); arm.position.y = -.65; armR.add(arm);
+  const paw = new THREE.Mesh(new THREE.SphereGeometry(.2, 8, 6), fur); paw.position.y = -1.35; armR.add(paw);
+  // oversized gold rifle w/ crown core (aims forward from right hand; swings with armR)
+  const rifle = new THREE.Group(); rifle.position.set(-.25, -1.3, .9); rifle.rotation.x = Math.PI / 2; rifle.scale.setScalar(1.35);
+  const add = (geo, m, x, y, z, rx = 0) => { const k = new THREE.Mesh(geo, m); k.position.set(x, y, z); k.rotation.x = rx; rifle.add(k); return k; };
+  const gunM = M(0x0d0d12, 0, { metalness: .8, roughness: .3 });
+  add(new THREE.BoxGeometry(.34, 1.8, .42), gunM, 0, 0, 0);                          // receiver
+  add(new THREE.CylinderGeometry(.08, .1, 2.6, 8), gunM, 0, 2.2, .06);               // barrel
+  add(new THREE.ConeGeometry(.16, .5, 6), gold, 0, 3.7, .06);                        // spear tip
+  add(new THREE.BoxGeometry(.4, 1.2, .1), gold, 0, .6, .25);                         // gold side plate
+  for (const sx of [-1, 1]) { const f = add(new THREE.ConeGeometry(.12, .9, 4), gold, sx * .28, 1.1, 0); f.rotation.z = sx * -.6; } // fins
+  add(new THREE.BoxGeometry(.3, .9, .5), gunM, 0, -1.25, -.12);                      // stock
+  add(new THREE.BoxGeometry(.18, .5, .14), gunM, 0, -.2, -.35);                      // grip
+  const core = add(new THREE.IcosahedronGeometry(.24, 0), M(0xffd45a, 3), 0, .25, .32);  // crown core
+  for (let i = 0; i < 3; i++) add(new THREE.ConeGeometry(.06, .22, 4), M(0xffd45a, 2.5), (i - 1) * .12, .25 + (i === 1 ? .32 : .24), .32);
+  const halo = add(new THREE.SphereGeometry(.55, 10, 8), glow(0xffc83d), 0, .25, .32); halo.material.opacity = .35;
+  const blade = add(new THREE.CylinderGeometry(.05, .05, 2.6, 6), glow(0xffe08a), 0, 2.2, .06); blade.material.opacity = .5;
+  armR.add(rifle);
+  const bl = new THREE.PointLight(0xffc83d, 5, 8); bl.position.set(0, -1.3, 1.6); armR.add(bl);
+  const shadow = new THREE.Mesh(new THREE.CircleGeometry(1.2, 20), new THREE.MeshBasicMaterial({ color: 0, transparent: true, opacity: .3 })); shadow.rotation.x = -Math.PI / 2; shadow.position.y = .05;
+  g.add(legL, legR, body, hem, trim, head, ruff, mkEar(-1), mkEar(1), muzzle, nose, shades, chain, pendant, tail, armL, armR, shadow);
+  g.userData = { legL, legR, armR, blade, core, tail }; g.scale.setScalar(1.6); return g;
 }
 const zayn = makeZayn(); scene.add(zayn);
 // speedboat
@@ -262,7 +309,7 @@ function tick(now) {
       let sp = 11 * Math.min(1, ml); if (S.dodge > 0) { sp = 42; S.dodge -= dt; burst(zayn.position.clone().setY(2), [0xffc83d, 0xff8a1e, SKY], 6, 2, 1, 0); if (ml < .1) mv.copy(fwd()); }
       zayn.position.add(mv.multiplyScalar(sp * dt)); const pl = Math.hypot(zayn.position.x, zayn.position.z); if (pl > 28) zayn.position.multiplyScalar(28 / pl);
       let dy = S.yaw - zayn.rotation.y; dy = Math.atan2(Math.sin(dy), Math.cos(dy)); zayn.rotation.y += dy * Math.min(1, dt * 14);
-      const ud = zayn.userData, w = ml > .1 ? Math.sin(S.t * 14) * .6 : 0; ud.legL.rotation.x = w; ud.legR.rotation.x = -w;
+      const ud = zayn.userData, w = ml > .1 ? Math.sin(S.t * 14) * .6 : 0; ud.legL.rotation.x = w; ud.legR.rotation.x = -w; ud.tail.rotation.z = Math.sin(S.t * 3) * .25; ud.core.rotation.y += dt * 3;
       S.swing = Math.max(0, S.swing - dt); ud.armR.rotation.x = S.swing > 0 ? -2.2 + (.25 - S.swing) * 14 : -.2 + w * .3;
       for (const k in S.cd) S.cd[k] = Math.max(0, S.cd[k] - dt); S.iframes -= dt; S.en = Math.min(100, S.en + dt * 3);
       if (S.spawnQ.length) { S.spawnT -= dt; if (S.spawnT <= 0) { spawn(S.spawnQ.shift()); S.spawnT = 1.1; } }
