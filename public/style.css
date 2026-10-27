@@ -56,3 +56,17 @@
 #mission em{display:block;font-style:normal;font-weight:900;color:#ffc83d;letter-spacing:2px;font-size:13px;margin:2px 0}
 #secDots{display:flex;gap:5px;margin:3px 0 4px}#secDots i{width:22px;height:5px;border-radius:3px;background:#ffffff30}#secDots i.done{background:#4DB8FF}#secDots i.cur{background:#ffc83d}
 #line{position:absolute;top:32%;width:100%;text-align:center;font-size:clamp(14px,2.2vw,20px);font-weight:700;color:#fff;text-shadow:0 2px 6px #000;opacity:0;transition:opacity .4s;pointer-events:none}
+
+/* roster cards */
+.cards{max-width:1200px}.card{width:200px}.card.pick{border-color:var(--cc,#ffc83d);box-shadow:0 0 22px color-mix(in srgb,var(--cc,#ffc83d) 40%,transparent)}
+.card .port{width:64px;height:64px;border-radius:50%;display:grid;place-items:center;font-weight:900;font-size:28px;border:2px solid var(--cc)}
+.card.pick b{background:var(--cc,#ffc83d)}.card .kit{display:flex;flex-direction:column;gap:2px;font-size:10px;letter-spacing:1px;color:var(--cc);opacity:.9;text-align:center}
+#title{overflow-y:auto}
+/* power buttons: dark glass + glyph, adult action-game HUD */
+.p{background:radial-gradient(circle at 50% 40%,#1a2333ee,#05080fee 70%)!important;border:2px solid currentColor;box-shadow:0 0 0 4px #0008,0 0 16px color-mix(in srgb,currentColor 45%,transparent);font-size:11px;letter-spacing:2px;gap:2px}
+.p[data-p=wave]{color:#5ff8ff}.p[data-p=chain]{color:#ffc83d}.p[data-p=roar]{color:#ff5aa8}.p.dodge{color:#9dffb0}
+.p .ic{display:block;width:46%;height:46%}.p .ic svg{width:100%;height:100%;fill:currentColor;stroke:currentColor;filter:drop-shadow(0 0 6px currentColor)}
+.p span{font-size:10px;font-weight:800;letter-spacing:2px;color:#fff}.p kbd{display:none}
+.p em{background:conic-gradient(#000c var(--cdp,0%),transparent 0)!important;transform:none!important;border-radius:50%}
+/* desktop: vertical illustrated skill strip (ref-short-frame.png) */
+@media (min-width:800px){body:not(.touch) #pw{left:16px;right:auto;top:118px;bottom:auto;display:flex;flex-direction:column;gap:10px}body:not(.touch) .p,body:not(.touch) .p.big{width:62px;height:62px;border-radius:10px;border-width:1.5px;box-shadow:0 0 0 3px #000a,0 0 10px color-mix(in srgb,currentColor 35%,transparent)}body:not(.touch) .p,body:not(.touch) .p.big{width:52px;height:52px}body:not(.touch) .p .ic{width:60%;height:60%}body:not(.touch) .p span{display:none}body:not(.touch) .p kbd{display:block;position:absolute;right:3px;bottom:1px;font-size:9px;opacity:.7;font-family:inherit}body:not(.touch) .p em{border-radius:10px}body:not(.touch) #stick{display:none}}
