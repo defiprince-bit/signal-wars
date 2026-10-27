@@ -35,7 +35,7 @@ docs/     DESIGN, GAMEPLAY, CHARACTERS, screenshots
 4. Unlock progression (Hero/Bankyo/Zayn…), leaderboards, 1v1 + teams
 5. Always-on hosted URL + live-stream hooks
 
-Docs: [DESIGN](docs/DESIGN.md) · [GAMEPLAY](docs/GAMEPLAY.md) · [CHARACTERS](docs/CHARACTERS.md) · [CONTRIBUTING](CONTRIBUTING.md)
+Docs: [DESIGN](docs/DESIGN.md) · [GAMEPLAY](docs/GAMEPLAY.md) · [CHARACTERS](docs/CHARACTERS.md) · [ENEMIES](docs/ENEMIES.md) · [STORY](docs/STORY.md) · [CONTRIBUTING](CONTRIBUTING.md)
 
 ## License
 MIT
