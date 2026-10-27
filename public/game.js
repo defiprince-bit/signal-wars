@@ -298,3 +298,17 @@ function tick(now) {
 }
 requestAnimationFrame(tick);
 window.__spawn = spawn; window.__S = S; window.__use = use;
+
+// ===== theme music (HTMLAudioElement, starts on first gesture) =====
+const music = new Audio('assets/audio/theme.mp3'); music.loop = true; music.preload = 'auto';
+let muted = localStorage.getItem('sw_muted') === '1', musicVol = .55;
+const muteBtn = document.getElementById('mute');
+function applyMusic() { music.volume = muted ? 0 : musicVol; music.muted = muted; muteBtn.textContent = muted ? '🔇' : '♪'; muteBtn.classList.toggle('off', muted); if (!muted) music.play().catch(() => {}); }
+function setDuck(on) { musicVol = on ? .3 : .55; if (!muted) music.volume = musicVol; }
+muteBtn.addEventListener('pointerdown', e => e.stopPropagation());
+muteBtn.onclick = e => { e.stopPropagation(); muted = !muted; localStorage.setItem('sw_muted', muted ? '1' : '0'); applyMusic(); };
+addEventListener('keydown', e => { if (e.code === 'KeyM') muteBtn.click(); });
+const unlock = () => { if (!muted) music.play().catch(() => {}); };
+['pointerdown', 'keydown', 'touchstart'].forEach(t => addEventListener(t, unlock, { once: true, capture: true }));
+applyMusic();
+setInterval(() => setDuck(S.mode === 'cine'), 250);
