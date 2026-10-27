@@ -173,7 +173,7 @@ const boat = new THREE.Group();
 // ===== isometric arena: muted dark floor so FX pop =====
 const ARENA = 40;
 const keep = new Set([ocean, pts, sky, zayn, boat]); const decor = scene.children.filter(o => !o.isLight && !keep.has(o));
-const floorTex = canvasTex(512, 512, (x, w, h) => { x.fillStyle = '#23242b'; x.fillRect(0, 0, w, h);
+const floorTex = canvasTex(512, 512, (x, w, h) => { x.fillStyle = '#6a6b70'; x.fillRect(0, 0, w, h);
   for (let i = 0; i < 900; i++) { x.fillStyle = `rgba(${Math.random() < .5 ? '255,255,255' : '0,0,0'},${Math.random() * .05})`; x.fillRect(Math.random() * w, Math.random() * h, 3 + Math.random() * 18, 3 + Math.random() * 18); }
   x.strokeStyle = 'rgba(77,184,255,.08)'; x.lineWidth = 2; for (let i = 0; i <= 8; i++) { x.beginPath(); x.moveTo(i * 64, 0); x.lineTo(i * 64, h); x.moveTo(0, i * 64); x.lineTo(w, i * 64); x.stroke(); } });
 floorTex.wrapS = floorTex.wrapT = THREE.RepeatWrapping; floorTex.repeat.set(6, 6);
@@ -182,7 +182,8 @@ let floorM, edgeM, tower;
 { const f = new THREE.Mesh(new THREE.CircleGeometry(ARENA + 6, 64), new THREE.MeshStandardMaterial({ map: floorTex, roughness: 1 })); f.rotation.x = -Math.PI / 2; f.position.y = .32; arena.add(f); floorM = f.material;
   const edge = new THREE.Mesh(new THREE.TorusGeometry(ARENA + 1, .25, 6, 96), glow(SKY)); edge.rotation.x = Math.PI / 2; edge.position.y = .4; edge.material.opacity = .5; arena.add(edge); edgeM = edge.material;
   tower = new THREE.Group(); const tr = new THREE.Mesh(new THREE.TorusGeometry(5, .15, 6, 48), glow(SKY)); tr.rotation.x = Math.PI / 2; tr.position.y = .45;
-  const pole = new THREE.Mesh(new THREE.CylinderGeometry(.35, .6, 7, 6), new THREE.MeshStandardMaterial({ color: 0x1b2230, emissive: SKY, emissiveIntensity: .3 })); pole.position.y = 3.5; tower.add(tr, pole); tower.position.set(0, 0, -14); tower.visible = false; arena.add(tower); }
+  const pole = new THREE.Mesh(new THREE.CylinderGeometry(.45, .8, 12, 6), new THREE.MeshStandardMaterial({ color: 0x1b2230, emissive: SKY, emissiveIntensity: .25 })); pole.position.y = 6;
+  const tcore = new THREE.Mesh(new THREE.OctahedronGeometry(1.1, 0), M(SKY, 3.5)); tcore.position.y = 12.8; const tglow = new THREE.Mesh(new THREE.SphereGeometry(2, 10, 8), glow(SKY)); tglow.material.opacity = .25; tglow.position.y = 12.8; tower.add(tr, pole, tcore, tglow); tower.userData.core = tcore; tower.position.set(0, 0, -9); tower.visible = false; arena.add(tower); }
 arena.visible = false; scene.add(arena);
 
 // ===== shared Static shader (red-magenta, noise flicker) =====
@@ -209,13 +210,15 @@ const crabBody = new THREE.InstancedMesh(new THREE.DodecahedronGeometry(1, 0).sc
 const crabClaw = new THREE.InstancedMesh(new THREE.ConeGeometry(.35, 1.2, 4).rotateX(Math.PI / 2), STATIC, MAXC * 2);
 for (const im of [crabBody, crabClaw]) { im.count = 0; im.frustumCulled = false; im.instanceMatrix.setUsage(THREE.DynamicDrawUsage); scene.add(im); }
 const crabEyes = new THREE.InstancedMesh(new THREE.SphereGeometry(.16, 6, 4), new THREE.MeshBasicMaterial({ color: 0xffffff }), MAXC * 2); crabEyes.count = 0; crabEyes.frustumCulled = false; scene.add(crabEyes);
+const BRUTE_CHROME = new THREE.MeshStandardMaterial({ color: 0x2a2d34, metalness: .95, roughness: .28, emissive: 0x08090c });
 function makeMesh(type) {
   const g = new THREE.Group();
   if (type === 'wick') { const b = new THREE.Mesh(new THREE.BoxGeometry(.8, 2.2, .8), STATIC_SOLID); b.position.y = 1.5; g.add(b);
     const w = new THREE.Mesh(new THREE.BoxGeometry(.14, 1.1, .14), glow(0xff5a8a)); w.position.y = 3.2; g.add(w); }
-  if (type === 'brute') { const b = new THREE.Mesh(new THREE.BoxGeometry(2.6, 4.4, 2.2), STATIC_SOLID); b.position.y = 2.6; g.add(b);
-    const wick = new THREE.Mesh(new THREE.BoxGeometry(.4, 2, .4), glow(0xff2a5a)); wick.position.y = 5.8; g.add(wick);
-    for (const s of [-1, 1]) { const a = new THREE.Mesh(new THREE.BoxGeometry(1, 2.6, 1), STATIC_SOLID); a.position.set(s * 1.9, 2.4, 0); g.add(a); } }
+  if (type === 'brute') { const b = new THREE.Mesh(new THREE.BoxGeometry(2.6, 4.4, 2.2), BRUTE_CHROME); b.position.y = 2.6; g.add(b);
+    const wick = new THREE.Mesh(new THREE.BoxGeometry(.5, 2.4, .5), M(0xff1a10, 3)); wick.position.y = 6; g.add(wick); const cf = new THREE.Mesh(new THREE.ConeGeometry(.35, .9, 6), glow(0xff3a10)); cf.position.y = 7.6; g.add(cf);
+    const seam = new THREE.Mesh(new THREE.BoxGeometry(2.66, .25, 2.26), M(0xff1a10, 2.5)); seam.position.y = 3.4; g.add(seam);
+    for (const s of [-1, 1]) { const a = new THREE.Mesh(new THREE.BoxGeometry(1, 2.6, 1), BRUTE_CHROME); a.position.set(s * 1.9, 2.4, 0); g.add(a); } }
   for (const s of [-1, 1]) { const e = new THREE.Mesh(new THREE.SphereGeometry(.15, 6, 4), new THREE.MeshBasicMaterial({ color: 0xffffff })); e.position.set(s * .25, type === 'brute' ? 4 : 2.1, type === 'brute' ? 1.15 : .42); g.add(e); }
   scene.add(g); return g;
 }
@@ -270,11 +273,11 @@ const rep = (t, n) => Array(n).fill(t);
 const mix = w => w.sort(() => Math.random() - .5);
 // Mission 01 is cut into 3 sectioned levels on the Ember Dot island; each has its own tint, objective and wave plan
 const SECTIONS = [
-  { name: 'SHORE LANDING', obj: 'Clear the beach', floor: 0x8a7458, edge: 0xff3cac, line: 'Warden: "Those are crabs. Ugly. Easy. Hit them."',
+  { name: 'SHORE LANDING', obj: 'Clear the beach', floor: 0xc9ad84, edge: 0xffd08a, line: 'Warden: "Those are crabs. Ugly. Easy. Hit them."',
     waves: () => [mix(rep('crab', 24)), mix([...rep('crab', 30), ...rep('wick', 10)])] },
-  { name: 'TOWER RIDGE', obj: 'Restore Signal Tower 1', floor: 0x4c7f8a, edge: 0x4DB8FF, hold: 15, line: 'Warden: "Stand in the ring. Keep the Tower breathing."',
+  { name: 'TOWER RIDGE', obj: 'Restore Signal Tower 1', floor: 0x3e7680, edge: 0x4DB8FF, hold: 15, line: 'Warden: "Stand in the ring. Keep the Tower breathing."',
     waves: () => [mix([...rep('crab', 36), ...rep('wick', 14)]), mix([...rep('crab', 44), ...rep('wick', 22)])] },
-  { name: 'CRATER GATE', obj: 'Defeat the Red Candle Brute', floor: 0x8a4a46, edge: 0xff2a3a, line: 'Brute: "…LIQUIDATE…"',
+  { name: 'CRATER GATE', obj: 'Defeat the Red Candle Brute', floor: 0x9a3a1a, edge: 0xff1a1a, line: 'Brute: "…LIQUIDATE…"',
     waves: () => [mix([...rep('crab', 30), ...rep('wick', 20)]), ['brute', ...mix([...rep('crab', 40), ...rep('wick', 16)])]] },
 ];
 let WAVES = [];
@@ -306,7 +309,7 @@ function secHud() { const c = SECTIONS[S.sec]; $('#secName').textContent = `${S.
 function startSection(i, fromBoat = false) { // entering a section: (fade already black) reset field, tint ground, fade in, banner card
   const c = SECTIONS[i]; clearField(); waves.length = 0; S.sec = i; S.wave = 0; S.hold = 0; S.spawnQ = []; S.waveNext = 0; S.secDone = false; WAVES = c.waves();
   S.hp = 100; S.iframes = 1.5; S.buff = 0; S.cd = { wave: 0, chain: 0, roar: 0, dodge: 0 }; if (fromBoat) Object.assign(S, { en: 40, score: 0, kills: 0, xp: 0 }); else S.en = Math.max(S.en, 40);
-  floorM.color.set(c.floor); edgeM.color.set(c.edge); tower.visible = !!c.hold; zayn.position.set(0, .3, c.hold ? 6 : 0); S.secStart = { score: S.score, kills: S.kills, xp: S.xp }; secHud();
+  floorM.color.set(c.floor); edgeM.color.set(c.edge); tower.visible = !!c.hold; zayn.position.set(0, .3, c.hold ? 3 : 0); S.secStart = { score: S.score, kills: S.kills, xp: S.xp }; secHud();
   setTimeout(() => { fade(0); S.mode = 'play'; banner(fromBoat ? 'MISSION 01 · EMBER DOT' : `SECTION ${i + 1} · ${c.name}`, '#4DB8FF');
     setTimeout(() => { if (S.sec === i && S.mode === 'play') { banner(c.name, '#ffc83d'); $('#line').textContent = c.line; $('#line').style.opacity = 1; setTimeout(() => $('#line').style.opacity = 0, 3200); } }, 1500);
     setTimeout(() => { if (S.sec === i && S.mode === 'play' && !S.wave) nextWave(); }, 2600); }, 600); }
@@ -417,7 +420,7 @@ function tick(now) {
       let sp = 12 * ml; if (S.dodge > 0) { sp = 44; S.dodge -= dt; if (ml < .1) mv.copy(aimDir()); burst(zayn.position.clone().setY(1.5), [0x3ef2ff, 0xffffff], 5, 2, 1, 0); }
       zayn.position.add(mv.multiplyScalar(sp * dt)); zayn.position.y = .3; const pl = Math.hypot(zayn.position.x, zayn.position.z); if (pl > ARENA) { zayn.position.x *= ARENA / pl; zayn.position.z *= ARENA / pl; }
       let dy = S.yaw - zayn.rotation.y; dy = Math.atan2(Math.sin(dy), Math.cos(dy)); zayn.rotation.y += dy * Math.min(1, dt * 18);
-      const ud = zayn.userData, w = ml > .1 ? Math.sin(S.t * 14) * .6 : 0; ud.legL.rotation.x = w; ud.legR.rotation.x = -w; ud.tail.rotation.z = Math.sin(S.t * 3) * .25; ud.core.rotation.y += dt * 3;
+      const ud = zayn.userData, w = ml > .1 ? Math.sin(S.t * 14) * .6 : 0; ud.legL.rotation.x = w; ud.legR.rotation.x = -w; ud.tail.rotation.z = Math.sin(S.t * 3) * .25; ud.core.rotation.y += dt * 3; tower.userData.core.rotation.y += dt * 1.5;
       S.swing = Math.max(0, S.swing - dt); ud.armR.rotation.x = S.swing > 0 ? -2.2 + (.2 - S.swing) * 16 : -.2 + w * .3;
       for (const k in S.cd) S.cd[k] = Math.max(0, S.cd[k] - dt); S.iframes -= dt; S.buff -= dt; S.en = Math.min(100, S.en + dt * 3);
       // auto-fire WAVE (kite + shoot); mouse hold / Q also fires

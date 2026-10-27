@@ -34,6 +34,9 @@ Every mission tells one story beat and ends in a payoff (boss, rescue, island cl
 Missions are cut into **3 short sections** on the island instead of one endless fight. Each section has its own ground tint/edge color, objective, Warden/enemy line and wave plan. HUD (top-left) shows `n/3 · SECTION NAME`, a 3-segment progress bar and the live objective.
 - **Clear:** finish the section's waves (+ any hold objective) → "SECTION CLEARED" banner → fade → next section card. HP refills, score/kills/gems carry over.
 - **Fail:** LIQUIDATED → **RETRY SECTION** (restart current section with stats rolled back to section start) or **RUN IT BACK** (full mission from the boat).
+- **Section color rules (art direction):** each section owns its edge ring + ground tint. Static enemies always stay red/magenta; the player stays sky-blue/gold; bosses (Red Candle Brute) are dark chrome with a red-candle emissive only, never crab magenta.
+  - Ember Dot: §1 Shore = lifted sand ground, warm gold edge · §2 Tower Ridge = teal ground, sky edge, tall Signal Tower with emissive sky-blue core · §3 Crater Gate = deep ember-orange ground, hard red edge.
+  - Later islands: Moonleaf Oval = night green; The h = rooftop grey.
 - Mission 01 sections: see [STORY.md](STORY.md#mission-01-section-levels).
 - Damage numbers merge nearby hits (≤3.5m, <0.35s) into one growing number; hard cap 8 visible floats, extras fold into the nearest. Crits stay yellow.
 
