@@ -43,3 +43,8 @@ Shared controls: WAVE (Q/auto) · signature skill (E) · ultimate (R, 30 Flow) �
 
 **Next polish:** title cards use letter tiles for the MVP; replace with mini silhouettes rendered from the character stills in `public/assets/characters/`.
 **Zayn combat read:** in the arena his fur/shirt/sleeves fold to a dark mass; only ears, gold chain collar and weapon tip stay gold (full colors on title/boat).
+
+## Unlocks (fan build)
+Starters (lower-power kits): **Lyra** (85 HP, fragile fast archer), **Hertzling** (90 HP, crowd-control spirit), **Chado** (90 HP, short-range glass blade).
+Locked, bought with **Merits** (gems collected + 100 per cleared mission, saved in localStorage): Kael 150 · Warden 200 · Bankyo 350 · **Zayn 500** (strong, not a starter) · Hero 800.
+Dev/testing: add `?all` to the URL to unlock everyone.

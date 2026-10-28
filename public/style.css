@@ -78,3 +78,7 @@ body.touch .p,body.touch .p.big{width:52px;height:52px}body.touch .p kbd{display
 @media (max-width:600px){.p,.p.big{width:48px;height:48px}}
 body:not(.touch) #stick{display:none}
 #hud #help{display:none}
+#merits{color:#4DB8FF;font-weight:800;letter-spacing:2px;font-size:13px;margin:-4px 0 8px}
+.card.locked{filter:grayscale(.85);opacity:.7}.card.locked .port{background:#0a1220;border:2px solid #fff3;display:grid;place-items:center;width:64px;height:64px;border-radius:50%;font-size:24px}
+.card .unlock{pointer-events:auto;cursor:pointer;border:1px solid var(--cc);background:#0008;color:var(--cc);font-weight:800;padding:6px 14px;border-radius:20px;font-size:12px}
+.card .unlock:disabled{opacity:.5;cursor:default}

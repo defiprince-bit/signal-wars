@@ -73,3 +73,12 @@ Fodder (crabs, runners): flat magenta Static shader, ≤2 materials (body + flam
 
 ## Loop
 Enemy HP scales +35%/section and +15%/wave. Ambient dust motes over a muted stone floor. Best score saved in localStorage (shown on title + end screen).
+
+## Arena status
+The circular arena is **deprecated**. It stays only as the placeholder until the HertzFlow logo map lands. Planned next: a logo-shaped map with route **A → B** through the sections, plus a **Binance Siege mode switch** (diamond-logo map). Section tints and rules carry over.
+
+## Enemy contrast (art director, crabs)
+Charcoal shell; magenta only as a thin fresnel rim + glitch fringe. Big cyan-white eyes with a soft glow so every crab has a face. Per-crab rim hue ±4% / value ±10% jitter. Wick Runner: charcoal body, the tall hard-red wick is its only accent (packs read as N candles). Crab separation keeps ≥0.4× body-width gaps so legs don't merge. Target: count 6 crabs in ~1s at phone size.
+
+## Reserved silhouette slots
+**Stripes** and **Good Afternoon** have reserved slots but no meshes. Wait for the art director's shapes; don't invent them.

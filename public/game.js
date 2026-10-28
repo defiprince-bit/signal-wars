@@ -315,6 +315,19 @@ function staticMaterial() {
       totalEmissiveRadiance *= 0.55 + n * 0.9;`); };
   return m;
 }
+function rimMaterial() { // dark charcoal body; magenta only as thin rim + glitch fringe (instanceColor/vColor = rim tint, value jitter)
+  const m = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: .55, metalness: 0, flatShading: true });
+  m.onBeforeCompile = s => { s.uniforms.uTime = U.uTime;
+    s.fragmentShader = 'uniform float uTime;\n' + s.fragmentShader
+      .replace('#include <color_fragment>', `#include <color_fragment>
+        vec3 rimTint = diffuseColor.rgb; float hit = max(0.0, rimTint.r - 1.0);
+        diffuseColor.rgb = vec3(0.075, 0.07, 0.085) * (0.85 + 0.3 * fract(rimTint.b * 7.0)) + hit * 0.35;`)
+      .replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>
+        float rim = pow(1.0 - clamp(abs(dot(normalize(normal), normalize(vViewPosition))), 0.0, 1.0), 3.0);
+        float n = fract(sin(dot(floor(vViewPosition.xy * 4.0) + floor(uTime * 14.0), vec2(12.9898, 78.233))) * 43758.5453);
+        totalEmissiveRadiance += min(rimTint, vec3(1.0)) * (rim * 2.0 + step(0.93, n) * 0.5) + hit * 0.6;`); };
+  return m; }
+const SHELL = rimMaterial(); const SHELL_SOLID = rimMaterial(); SHELL_SOLID.color.set(0xff1e6a);
 const STATIC = staticMaterial(); const STATIC_SOLID = staticMaterial(); STATIC_SOLID.color.set(0xd8204e); // same Static shader; solid tint for non-instanced
 const STATIC_COL = new THREE.Color(0xd8204e), HIT_COL = new THREE.Color(0xffffff).multiplyScalar(3);
 
@@ -330,22 +343,24 @@ function mergeG(list) { // tiny merge (non-indexed) so a crab part stays ONE ins
   for (const g of parts) { pos.set(g.attributes.position.array, o * 3); nor.set(g.attributes.normal.array, o * 3); o += g.attributes.position.count; }
   const out = new THREE.BufferGeometry(); out.setAttribute('position', new THREE.BufferAttribute(pos, 3)); out.setAttribute('normal', new THREE.BufferAttribute(nor, 3)); return out; }
 // crab: wide flat carapace with spiked rim + raised back; claw: arm + big two-jaw pincer; 6 legs
-const crabBody = new THREE.InstancedMesh(mergeG([new THREE.SphereGeometry(1, 10, 6, 0, Math.PI * 2, 0, Math.PI / 2).scale(1.45, .55, 1.1), new THREE.CylinderGeometry(1.45, 1.2, .3, 10).scale(1, 1, .76).translate(0, -.12, 0),
-  ...[-1, 1].map(sx => new THREE.ConeGeometry(.16, .55, 4).rotateZ(-sx * 1.3).translate(sx * 1.55, .05, .2)), ...[-1, 1].map(sx => new THREE.ConeGeometry(.14, .45, 4).rotateZ(-sx * 1.2).translate(sx * 1.35, .05, -.5))]), STATIC, MAXC);
+const crabBody = new THREE.InstancedMesh(mergeG([new THREE.SphereGeometry(1, 12, 6, 0, Math.PI * 2, 0, Math.PI / 2).scale(1.45, .55, 1.1), new THREE.CylinderGeometry(1.45, 1.2, .3, 10).scale(1, 1, .76).translate(0, -.12, 0),
+  ...[-1, 1].map(sx => new THREE.ConeGeometry(.16, .55, 4).rotateZ(-sx * 1.3).translate(sx * 1.55, .05, .2)), ...[-1, 1].map(sx => new THREE.ConeGeometry(.14, .45, 4).rotateZ(-sx * 1.2).translate(sx * 1.35, .05, -.5))]), SHELL, MAXC);
 const crabClaw = new THREE.InstancedMesh(mergeG([new THREE.BoxGeometry(.32, .3, .9).translate(0, 0, -.35), new THREE.SphereGeometry(.42, 8, 6).scale(1, .75, 1.1).translate(0, 0, .25),
-  new THREE.ConeGeometry(.2, .85, 5).rotateX(Math.PI / 2).translate(.13, .08, .9), new THREE.ConeGeometry(.15, .7, 5).rotateX(Math.PI / 2).rotateZ(.3).translate(-.12, -.05, .82)]), STATIC, MAXC * 2);
-const crabLeg = new THREE.InstancedMesh(new THREE.BoxGeometry(1.1, .12, .14).translate(.55, 0, 0).rotateZ(-.55), STATIC, MAXC * 6); crabLeg.count = 0; crabLeg.frustumCulled = false; scene.add(crabLeg);
+  new THREE.ConeGeometry(.2, .85, 5).rotateX(Math.PI / 2).translate(.13, .08, .9), new THREE.ConeGeometry(.15, .7, 5).rotateX(Math.PI / 2).rotateZ(.3).translate(-.12, -.05, .82)]), SHELL, MAXC * 2);
+const crabLeg = new THREE.InstancedMesh(new THREE.BoxGeometry(1.1, .12, .14).translate(.55, 0, 0).rotateZ(-.55), SHELL, MAXC * 6); crabLeg.count = 0; crabLeg.frustumCulled = false; scene.add(crabLeg);
 const LEG_COL = new THREE.Color(0x8a0f2e);
 for (const im of [crabBody, crabClaw]) { im.count = 0; im.frustumCulled = false; im.instanceMatrix.setUsage(THREE.DynamicDrawUsage); scene.add(im); }
-const crabEyes = new THREE.InstancedMesh(new THREE.SphereGeometry(.16, 6, 4), new THREE.MeshBasicMaterial({ color: 0xffffff }), MAXC * 2); crabEyes.count = 0; crabEyes.frustumCulled = false; scene.add(crabEyes);
+const crabEyes = new THREE.InstancedMesh(new THREE.SphereGeometry(.24, 8, 6), new THREE.MeshBasicMaterial({ color: 0xe8ffff, toneMapped: false }), MAXC * 2);
+const eyeGlow = new THREE.InstancedMesh(new THREE.SphereGeometry(.42, 8, 6), new THREE.MeshBasicMaterial({ color: 0x7ff6ff, transparent: true, opacity: .35, blending: THREE.AdditiveBlending, depthWrite: false }), MAXC * 2); eyeGlow.count = 0; eyeGlow.frustumCulled = false; scene.add(eyeGlow); crabEyes.count = 0; crabEyes.frustumCulled = false; scene.add(crabEyes);
 const BRUTE_CHROME = new THREE.MeshStandardMaterial({ color: 0x2a2d34, metalness: .95, roughness: .28, emissive: 0x08090c });
 const WICK_BODY = new THREE.CylinderGeometry(.42, .55, 2.4, 7), WICK_FLAME = new THREE.ConeGeometry(.22, .9, 5), WICK_LEG = new THREE.BoxGeometry(.18, 1.3, .22).translate(0, -.5, 0), WICK_BLADE = new THREE.ConeGeometry(.12, 1.3, 4);
+const WICK_RED = M(0xff1a0a, 4);
 const BRUTE_EYE = M(0xff1a10, 4), WHITE_EYE = new THREE.MeshBasicMaterial({ color: 0xffffff });
 function makeMesh(type) {
   const g = new THREE.Group();
-  if (type === 'wick') { const b = new THREE.Mesh(WICK_BODY, STATIC_SOLID); b.position.y = 1.9; b.rotation.x = .35; g.add(b); // hunched candle sprinter
-    const fl = new THREE.Mesh(WICK_FLAME, glow(0xff5a8a)); fl.position.set(0, 3.5, .55); g.add(fl);
-    for (const sx of [-1, 1]) { const l = new THREE.Mesh(WICK_LEG, STATIC_SOLID); l.position.set(sx * .3, .7, 0); g.add(l); g.userData['l' + sx] = l; const a = new THREE.Mesh(WICK_BLADE, STATIC_SOLID); a.position.set(sx * .6, 2.1, .5); a.rotation.set(1.2, 0, sx * .3); g.add(a); } }
+  if (type === 'wick') { const b = new THREE.Mesh(WICK_BODY, SHELL_SOLID); b.position.y = 1.9; b.rotation.x = .35; g.add(b); // hunched candle sprinter
+    const fl = new THREE.Mesh(WICK_FLAME, WICK_RED); fl.position.set(0, 3.7, .55); fl.scale.set(1, 1.4, 1); g.add(fl);
+    for (const sx of [-1, 1]) { const l = new THREE.Mesh(WICK_LEG, SHELL_SOLID); l.position.set(sx * .3, .7, 0); g.add(l); g.userData['l' + sx] = l; const a = new THREE.Mesh(WICK_BLADE, SHELL_SOLID); a.position.set(sx * .6, 2.1, .5); a.rotation.set(1.2, 0, sx * .3); g.add(a); } }
   if (type === 'brute') { const b = new THREE.Mesh(new THREE.BoxGeometry(2.6, 4.4, 2.2), BRUTE_CHROME); b.position.y = 2.6; g.add(b);
     const wick = new THREE.Mesh(new THREE.BoxGeometry(.5, 2.4, .5), M(0xff1a10, 3)); wick.position.y = 6; g.add(wick); const cf = new THREE.Mesh(new THREE.ConeGeometry(.35, .9, 6), glow(0xff3a10)); cf.position.y = 7.6; g.add(cf);
     const seam = new THREE.Mesh(new THREE.BoxGeometry(2.66, .25, 2.26), M(0xff1a10, 2.5)); seam.position.y = 3.4; g.add(seam);
@@ -463,8 +478,8 @@ function spawn(type, ang) { const T = TYPES[type], a = ang ?? Math.random() * 6.
   enemies.push(e); burst(e.pos.clone().setY(1), [0xff1450, 0xa24cff], 10, 5, 4);
 }
 function best() { const b = Math.max(+localStorage.getItem('sw_best') || 0, S.score); localStorage.setItem('sw_best', b); return b; }
-function win() { S.mode = 'end'; setTimeout(() => { show('#retry', false); tower.visible = false; $('#endT').textContent = 'MISSION COMPLETE'; $('#endT').style.color = '#4DB8FF'; $('#endS').textContent = `Ember Dot secured · ${S.kills} Static cleared · ${S.xp} gems · score ${S.score} · best ${best()}. Next: Moonleaf Oval.`; show('#end', true); }, 900); }
-function lose() { S.mode = 'end'; banner('LIQUIDATED', '#ff2a5a'); setTimeout(() => { $('#endT').textContent = 'LIQUIDATED'; $('#endT').style.color = '#ff2a5a'; $('#endS').textContent = `${CH.name[0] + CH.name.slice(1).toLowerCase()} went down in ${SECTIONS[S.sec].name} · ${S.kills} kills · score ${S.score} · best ${best()}. Retry the section or run the mission back.`; show('#retry', true); show('#end', true); }, 1200); }
+function win() { addMerits(S.xp + 100); S.mode = 'end'; setTimeout(() => { show('#retry', false); tower.visible = false; $('#endT').textContent = 'MISSION COMPLETE'; $('#endT').style.color = '#4DB8FF'; $('#endS').textContent = `Ember Dot secured · ${S.kills} Static cleared · ${S.xp} gems · score ${S.score} · best ${best()}. Next: Moonleaf Oval. +${S.xp + 100} Merits (◆ ${merits()}).`; show('#end', true); }, 900); }
+function lose() { addMerits(S.xp); S.mode = 'end'; banner('LIQUIDATED', '#ff2a5a'); setTimeout(() => { $('#endT').textContent = 'LIQUIDATED'; $('#endT').style.color = '#ff2a5a'; $('#endS').textContent = `${CH.name[0] + CH.name.slice(1).toLowerCase()} went down in ${SECTIONS[S.sec].name} · ${S.kills} kills · score ${S.score} · best ${best()}. Retry the section or run the mission back.`; show('#retry', true); show('#end', true); }, 1200); }
 
 const aimDir = () => new THREE.Vector3(Math.sin(S.yaw), 0, Math.cos(S.yaw));
 function boom(p, col, r, dmg, kb = 10) { if (r > 4) sfx('boom'); // AoE explosion: flash + rings + sparks + damage
@@ -543,15 +558,26 @@ addEventListener('pointermove', e => { if (e.pointerType === 'mouse') { mouse.on
   st.addEventListener('pointerdown', e => { id = e.pointerId; st.setPointerCapture(id); mv(e); e.stopPropagation(); });
   st.addEventListener('pointermove', e => e.pointerId === id && mv(e));
   st.addEventListener('pointerup', () => { id = null; joy.x = joy.y = 0; kn.style.transform = ''; }); }
-$('.cards').innerHTML = Object.entries(CHARS).map(([id, c]) => `<div class="card pick" data-c="${id}" style="--cc:${c.col}"><div class="port" style="background:radial-gradient(circle at 35% 30%,${c.col},#0a1220 75%)">${c.name[0]}</div><h3>${c.name}</h3><small>${c.title}</small><p>${c.blurb}</p><div class="kit"><span>${c.chain.name}</span><span>${c.roar.name}</span></div><b>PLAY</b></div>`).join('');
+const STARTERS = ['lyra', 'hertzling', 'chado'], UNLOCK_COST = { kael: 150, warden: 200, bankyo: 350, zayn: 500, hero: 800 }; // Zayn/Hero/Bankyo are the strong kits
+const ALL = new URLSearchParams(location.search).has('all');
+const merits = () => +localStorage.getItem('sw_merits') || 0, owned = () => new Set([...STARTERS, ...JSON.parse(localStorage.getItem('sw_owned') || '[]')]);
+const isOwned = id => ALL || owned().has(id);
+function addMerits(n) { localStorage.setItem('sw_merits', merits() + n); }
+function renderCards() {
+$('.cards').innerHTML = Object.entries(CHARS).sort(([a], [b]) => isOwned(b) - isOwned(a)).map(([id, c]) => isOwned(id) ? `<div class="card pick" data-c="${id}" style="--cc:${c.col}"><div class="port" style="background:radial-gradient(circle at 35% 30%,${c.col},#0a1220 75%)">${c.name[0]}</div><h3>${c.name}</h3><small>${c.title}</small><p>${c.blurb}</p><div class="kit"><span>${c.chain.name}</span><span>${c.roar.name}</span></div><b>PLAY</b></div>` : `<div class="card locked" data-c="${id}" style="--cc:${c.col}"><div class="port">🔒</div><h3>${c.name}</h3><small>${c.title}</small><p>${c.blurb}</p><button class="unlock" data-c="${id}" ${merits() < UNLOCK_COST[id] ? 'disabled' : ''}>UNLOCK · ${UNLOCK_COST[id]} ◆</button></div>`).join('');
+$('#merits') && ($('#merits').textContent = `◆ ${merits()} Merits`);
 document.querySelectorAll('.card.pick').forEach(el => el.onclick = () => { setChar(el.dataset.c); fade(1); setTimeout(() => { startCine(); fade(0); }, 600); });
+document.querySelectorAll('.unlock').forEach(el => el.onclick = e => { e.stopPropagation(); const id = el.dataset.c, cost = UNLOCK_COST[id]; if (merits() < cost) return;
+  localStorage.setItem('sw_merits', merits() - cost); localStorage.setItem('sw_owned', JSON.stringify([...owned(), id].filter(x => !STARTERS.includes(x)))); renderCards(); }); }
+renderCards();
 $('.tag').textContent += (+localStorage.getItem('sw_best') ? `  ·  Best score ${localStorage.getItem('sw_best')}` : '');
+window.__merits = n => { addMerits(n); renderCards(); };
 window.__pick = id => { setChar(id); startCine(); };
-setChar('zayn'); if ('ontouchstart' in window || navigator.maxTouchPoints > 0) document.body.classList.add('touch');
+setChar('lyra'); if ('ontouchstart' in window || navigator.maxTouchPoints > 0) document.body.classList.add('touch');
 $('#skip').onclick = () => { if (S.mode === 'over') startBoat(); landOnBeach(); };
 $('#retry').onclick = () => { show('#end', false); fade(1); S.mode = 'clear'; const s0 = S.secStart; setTimeout(() => { Object.assign(S, s0); startSection(S.sec); }, 600); };
 $('#again').onclick = () => { show('#end', false); fade(1); setTimeout(() => { startCine(); fade(0); }, 600); };
-$('#menu').onclick = () => { show('#end', false); show('#hud', false); show('#title', true); S.mode = 'title'; setArena(false); clearField(); };
+$('#menu').onclick = () => { show('#end', false); show('#hud', false); show('#title', true); renderCards(); S.mode = 'title'; setArena(false); clearField(); };
 
 // ===== loop =====
 let last = performance.now();
@@ -620,22 +646,22 @@ function tick(now) {
         } else { if (d > e.T.r + 1.1) e.pos.addScaledVector(v3.normalize(), e.T.sp * dt);
           e.atk -= dt; if (d < e.T.r + 1.6 && e.atk <= 0) { e.atk = 1.1; hurt(e.T.dmg); } } }
       // separation (cheap: check few neighbours)
-      for (let k = 1; k <= 3; k++) { const o = enemies[(i + k * 7) % enemies.length]; if (o === e) continue; const dx = e.pos.x - o.pos.x, dz = e.pos.z - o.pos.z, dd = dx * dx + dz * dz, rr = (e.T.r + o.T.r) * 1.1; if (dd < rr * rr && dd > 1e-4) { const s = (rr - Math.sqrt(dd)) * .5 / Math.sqrt(dd); e.pos.x += dx * s; e.pos.z += dz * s; } }
+      for (let k = 1; k <= 5; k++) { const o = enemies[(i + k * 7) % enemies.length]; if (o === e) continue; const dx = e.pos.x - o.pos.x, dz = e.pos.z - o.pos.z, dd = dx * dx + dz * dz, rr = e.type === 'crab' && o.type === 'crab' ? 4.0 : (e.T.r + o.T.r) * 1.1; if (dd < rr * rr && dd > 1e-4) { const s = (rr - Math.sqrt(dd)) * .5 / Math.sqrt(dd); e.pos.x += dx * s; e.pos.z += dz * s; } }
       e.pos.addScaledVector(e.kb, dt); e.kb.multiplyScalar(Math.pow(.02, dt)); e.hit -= dt;
       if (e.mesh) { const pulse = e.tel > 0 ? 1 + Math.sin(S.t * 40) * .08 : 1; e.mesh.position.set(e.pos.x, e.type === 'wick' ? Math.abs(Math.sin(S.t * 16 + i)) * .35 : 0, e.pos.z); if (e.type === 'wick') { const ph = Math.sin(S.t * 16 + i) * .9; e.mesh.userData['l-1'].rotation.x = ph; e.mesh.userData.l1.rotation.x = -ph; } e.mesh.rotation.y = e.yaw + (e.stun > 0 ? S.t * 8 : 0); e.mesh.scale.setScalar((e.type === 'brute' ? 1.15 : 1) * (e.hit > 0 ? 1.25 : pulse)); } }
     // write crab instances
     let c = 0;
     for (const e of enemies) { if (e.type !== 'crab') continue; const s = e.hit > 0 ? 1.3 : 1, bob = Math.abs(Math.sin(S.t * 14 + c)) * .15;
-      o3.position.set(e.pos.x, .8 + bob, e.pos.z); o3.rotation.set(0, e.yaw + (e.stun > 0 ? S.t * 8 : 0), 0); o3.scale.setScalar(s); o3.updateMatrix(); crabBody.setMatrixAt(c, o3.matrix); crabBody.setColorAt(c, e.hit > 0 ? HIT_COL : STATIC_COL);
+      o3.position.set(e.pos.x, .8 + bob, e.pos.z); o3.rotation.set(0, e.yaw + (e.stun > 0 ? S.t * 8 : 0), 0); o3.scale.setScalar(s); o3.updateMatrix(); crabBody.setMatrixAt(c, o3.matrix); if (!e.jc) { e.jc = new THREE.Color().setHSL(.91 + (Math.random() - .5) * .08, 1, .5 * (.9 + Math.random() * .2)); } crabBody.setColorAt(c, e.hit > 0 ? HIT_COL : e.jc);
       for (const sx of [-1, 1]) { o3.position.set(e.pos.x + Math.cos(e.yaw) * sx * 1.2, .9, e.pos.z - Math.sin(e.yaw) * sx * 1.2); o3.position.addScaledVector(v3.set(Math.sin(e.yaw), 0, Math.cos(e.yaw)), .9 + Math.sin(S.t * 10 + c) * .25); o3.rotation.set(0, e.yaw - sx * .35, 0); o3.scale.setScalar(1.25); o3.updateMatrix();
-        const j = c * 2 + (sx > 0 ? 1 : 0); crabClaw.setMatrixAt(j, o3.matrix); crabClaw.setColorAt(j, STATIC_COL);
-        o3.position.set(e.pos.x + Math.cos(e.yaw) * sx * .3 + Math.sin(e.yaw) * .85, 1.25 + bob, e.pos.z - Math.sin(e.yaw) * sx * .3 + Math.cos(e.yaw) * .85); o3.scale.setScalar(1); o3.updateMatrix(); crabEyes.setMatrixAt(j, o3.matrix); }
+        const j = c * 2 + (sx > 0 ? 1 : 0); crabClaw.setMatrixAt(j, o3.matrix); crabClaw.setColorAt(j, e.hit > 0 ? HIT_COL : e.jc);
+        o3.position.set(e.pos.x + Math.cos(e.yaw) * sx * .3 + Math.sin(e.yaw) * .85, 1.3 + bob, e.pos.z - Math.sin(e.yaw) * sx * .3 + Math.cos(e.yaw) * .85); o3.scale.setScalar(1); o3.updateMatrix(); crabEyes.setMatrixAt(j, o3.matrix); eyeGlow.setMatrixAt(j, o3.matrix); }
       const cy = Math.cos(e.yaw), sy = Math.sin(e.yaw);
       for (let L = 0; L < 6; L++) { const sx = L < 3 ? -1 : 1, row = (L % 3) - 1, ph = Math.sin(S.t * 22 + c + L * 2.1) * .35;
         o3.position.set(e.pos.x - cy * sx * .95 * -1 + sy * row * .55, .6, e.pos.z + sy * sx * .95 * -1 + cy * row * .55);
-        o3.rotation.set(0, e.yaw + (sx > 0 ? 0 : Math.PI) + row * .45 + ph, 0); o3.scale.setScalar(1); o3.updateMatrix(); crabLeg.setMatrixAt(c * 6 + L, o3.matrix); crabLeg.setColorAt(c * 6 + L, LEG_COL); }
+        o3.rotation.set(0, e.yaw + (sx > 0 ? 0 : Math.PI) + row * .45 + ph, 0); o3.scale.setScalar(1); o3.updateMatrix(); crabLeg.setMatrixAt(c * 6 + L, o3.matrix); crabLeg.setColorAt(c * 6 + L, e.jc); }
       c++; }
-    crabBody.count = c; crabClaw.count = crabEyes.count = c * 2; crabLeg.count = c * 6; crabLeg.instanceMatrix.needsUpdate = true; if (crabLeg.instanceColor) crabLeg.instanceColor.needsUpdate = true;
+    crabBody.count = c; crabClaw.count = crabEyes.count = eyeGlow.count = c * 2; eyeGlow.instanceMatrix.needsUpdate = true; crabLeg.count = c * 6; crabLeg.instanceMatrix.needsUpdate = true; if (crabLeg.instanceColor) crabLeg.instanceColor.needsUpdate = true;
     for (const im of [crabBody, crabClaw, crabEyes]) { im.instanceMatrix.needsUpdate = true; if (im.instanceColor) im.instanceColor.needsUpdate = true; }
     // wave projectiles: pierce + mini explosion on hit
     for (let i = waves.length - 1; i >= 0; i--) { const w = waves[i]; w.life -= dt; w.m.position.addScaledVector(w.v, dt); const k = w.life / w.life0; for (const m of w.mats) m.opacity = Math.min(1, k * 3); w.m.scale.setScalar(1 + (1 - k) * .35); if (w.spin) w.m.rotation.y += dt * 9;
