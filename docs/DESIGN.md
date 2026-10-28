@@ -82,3 +82,11 @@ Charcoal shell; magenta only as a thin fresnel rim + glitch fringe. Big cyan-whi
 
 ## Reserved silhouette slots
 **Stripes** and **Good Afternoon** have reserved slots but no meshes. Wait for the art director's shapes; don't invent them.
+
+## Logo maps (current) — circular arena removed
+- Mode switch on title: **HERTZFLOW**, **BINANCE SIEGE**, HARDEST · SOON (desert alternate, held).
+- Each map is SDF land in the logo shape; sections form a narrow A→B path. Boat lands at A, player fights to B. Next path segment opens only after a section clears (beacon marks the trigger).
+- HertzFlow L→R: left dot shore (tutorial) → left pill corridor (Wave 1) → H crossbar hub (Brute; verticals = flank alleys) → right pill choke (darker canopy) → right dot extract gate (hold the ring). Turquoise reef halo.
+- Binance: same green islands, storm grade (dark teal water, lightning, fires); diamond channels A→B, outer L's → DIAMOND CORE finale (hold 12s).
+- Spawns come out of the canopy edge (sides/front/behind), never from open ocean. Enemies clamped to land; stuck ones re-emerge.
+- Ground/path kept muted; arena lighting dimmed (storm darker).

@@ -304,6 +304,82 @@ let floorM, edgeM, tower;
   const pole = new THREE.Mesh(new THREE.CylinderGeometry(.45, .8, 12, 6), new THREE.MeshStandardMaterial({ color: 0x1b2230, emissive: SKY, emissiveIntensity: .25 })); pole.position.y = 6;
   const tcore = new THREE.Mesh(new THREE.OctahedronGeometry(1.1, 0), M(SKY, 3.5)); tcore.position.y = 12.8; const tglow = new THREE.Mesh(new THREE.SphereGeometry(2, 10, 8), glow(SKY)); tglow.material.opacity = .25; tglow.position.y = 12.8; tower.add(tr, pole, tcore, tglow); tower.userData.core = tcore; tower.position.set(0, 0, -9); tower.visible = false; arena.add(tower); }
 arena.add(dust); arena.visible = false; scene.add(arena);
+// ===== logo maps (circular arena deprecated). Land + walkable A→B path are SDF shapes; Static pours out of the canopy, never the open sea =====
+const segD = (x, z, a, b) => { const ax = b[0] - a[0], az = b[1] - a[1], t = Math.max(0, Math.min(1, ((x - a[0]) * ax + (z - a[1]) * az) / (ax * ax + az * az || 1))); return Math.hypot(x - a[0] - ax * t, z - a[1] - az * t); };
+const CAP = (ax, az, bx, bz, r, o = {}) => ({ t: 'cap', a: [ax, az], b: [bx, bz], r, ...o }), BOX = (cx, cz, h, rot, rr = 4, o = {}) => ({ t: 'box', c: [cx, cz], h, rot, rr, ...o });
+function shapeD(sh, x, z, g = 0) { if (sh.t === 'cap') return segD(x, z, sh.a, sh.b) - sh.r - g;
+  const c = Math.cos(sh.rot), sn = Math.sin(sh.rot), dx = x - sh.c[0], dz = z - sh.c[1], lx = Math.abs(dx * c + dz * sn) - sh.h + sh.rr, lz = Math.abs(-dx * sn + dz * c) - sh.h + sh.rr;
+  return Math.hypot(Math.max(lx, 0), Math.max(lz, 0)) + Math.min(Math.max(lx, lz), 0) - sh.rr - g; }
+function outline(sh, g = 0) { const pts = [];
+  if (sh.t === 'cap') { const dx = sh.b[0] - sh.a[0], dz = sh.b[1] - sh.a[1], an = Math.atan2(dz, dx), R = sh.r + g;
+    for (let i = 0; i <= 16; i++) { const t = an + Math.PI / 2 + i / 16 * Math.PI; pts.push(new THREE.Vector2(sh.a[0] + Math.cos(t) * R, -(sh.a[1] + Math.sin(t) * R))); }
+    for (let i = 0; i <= 16; i++) { const t = an - Math.PI / 2 + i / 16 * Math.PI; pts.push(new THREE.Vector2(sh.b[0] + Math.cos(t) * R, -(sh.b[1] + Math.sin(t) * R))); } }
+  else { const h = sh.h - sh.rr, R = sh.rr + g, c = Math.cos(sh.rot), sn = Math.sin(sh.rot);
+    [[1, 1, 0], [-1, 1, 1], [-1, -1, 2], [1, -1, 3]].forEach(([qx, qz, k]) => { for (let i = 0; i <= 6; i++) { const t = k * Math.PI / 2 + i / 6 * Math.PI / 2, lx = qx * h + Math.cos(t) * R, lz = qz * h + Math.sin(t) * R; pts.push(new THREE.Vector2(sh.c[0] + lx * c - lz * sn, -(sh.c[1] + lx * sn + lz * c))); } }); }
+  return new THREE.ShapeGeometry(new THREE.Shape(pts)).rotateX(-Math.PI / 2); }
+const rp = (t, n) => Array(n).fill(t), mx = w => w.sort(() => Math.random() - .5);
+const MAPS = {
+  hertzflow: { name: 'HERTZFLOW', sub: 'The H mark · left → right', water: 0x0c3a56, reef: 0x26b5ad, sand: 0xd9c89c, ground: 0x2a4224, path: 0x4a4436, fog: 0x0a1c28, canopy: [0x2f7a34, 0x3c8c38, 0x24602b, 0x4a9a3e],
+    land: [CAP(-169, 0, -169, 0, 21, { sparse: 1 }), CAP(-105, -37, -105, 36, 21), CAP(-37, -61, -37, 95, 22), CAP(42, -99, 42, 63, 22), CAP(-37, -6, 42, -6, 14), CAP(111, -37, 111, 36, 21, { dark: 1 }), CAP(175, 0, 175, 0, 21, { sparse: 1 })],
+    path: [[-182, 0, -160, 0, 10, 0], [-160, 0, -105, 50, 4.5, 1], [-105, 50, -105, -50, 9, 1], [-105, -50, -37, -75, 4.5, 2], [-37, -75, -37, -6, 9, 2], [-37, -6, 42, -6, 10, 2], [42, -6, 42, 70, 9, 2], [42, 70, 111, 50, 4.5, 3], [111, 50, 111, -50, 7, 3], [111, -50, 166, -6, 4.5, 4], [166, -6, 178, 2, 12, 4]],
+    bars: [[-160, 0, -105, 50], [-105, -50, -37, -75], [42, 70, 111, 50], [111, -50, 166, -6]],
+    start: [-178, 0], trig: [null, [-106, 42], [-37, -68], [110, 42], [164, -6]], gate: [178, 1],
+    sections: [
+      { name: 'SHORE DROP', obj: 'Clear the drop zone', line: 'Warden: "Boat\'s gone. Crabs in the trees — clear the sand."', waves: () => [mx(rp('crab', 14)), mx([...rp('crab', 16), ...rp('wick', 4)])] },
+      { name: 'LEFT PILL', obj: 'Push up the corridor', line: 'Warden: "Canopy walls both sides. They\'ll come out of the leaves."', waves: () => [mx([...rp('crab', 26), ...rp('wick', 6)]), mx([...rp('crab', 30), ...rp('wick', 12)])] },
+      { name: 'H BRIDGE', obj: 'Break the Brute on the crossbar', boss: [2, -6], line: 'Brute: "…LIQUIDATE…"', waves: () => [mx([...rp('crab', 28), ...rp('wick', 12)]), ['brute', ...mx([...rp('crab', 30), ...rp('wick', 12)])]] },
+      { name: 'RIGHT PILL', obj: 'Hold the choke', line: 'Warden: "Tight and dark. Don\'t get pinned."', waves: () => [mx([...rp('crab', 36), ...rp('wick', 14)]), mx([...rp('crab', 42), ...rp('wick', 20)])] },
+      { name: 'EXTRACT GATE', obj: 'Light the gate', hold: 10, line: 'Warden: "Gate tower\'s right there. Hold it and we\'re out."', waves: () => [mx([...rp('crab', 24), ...rp('wick', 10)])] } ] },
+  binance: { name: 'BINANCE SIEGE', sub: 'Storm diamond · outer L\'s → core', water: 0x06262c, reef: 0x1f8a86, sand: 0xbfae86, ground: 0x23361e, path: 0x34312b, fog: 0x060d12, canopy: [0x2b6a2e, 0x376f2a, 0x1f4f22, 0x46803a], storm: 1,
+    land: [BOX(-75, 0, 26, Math.PI / 4), BOX(0, -75, 26, Math.PI / 4), BOX(75, 0, 26, Math.PI / 4), BOX(0, 75, 26, Math.PI / 4), BOX(0, 0, 22, Math.PI / 4)],
+    path: [[-104, 0, -75, 0, 11, 0], [-75, 0, -75, 0, 12, 0], [-75, 0, 0, -75, 4.5, 1], [0, -75, 0, -75, 12, 1], [0, -75, 75, 0, 4.5, 2], [75, 0, 75, 0, 13, 2], [75, 0, 0, 75, 4.5, 3], [0, 75, 0, 75, 12, 3], [0, 75, 0, 0, 4.5, 4], [0, 0, 0, 0, 14, 4]],
+    bars: [[-75, 0, 0, -75], [0, -75, 75, 0], [75, 0, 0, 75], [0, 75, 0, 0]],
+    start: [-102, 0], trig: [null, [-16, -59], [59, -16], [16, 59], [0, 26]], gate: [0, 0],
+    sections: [
+      { name: 'WEST DOCKS', obj: 'Take the docks', line: 'Warden: "Storm\'s on top of us. Move."', waves: () => [mx(rp('crab', 18)), mx([...rp('crab', 20), ...rp('wick', 6)])] },
+      { name: 'NORTH RIDGE', obj: 'Clear the ridge', line: 'Warden: "Fires everywhere. Watch the treeline."', waves: () => [mx([...rp('crab', 28), ...rp('wick', 10)]), mx([...rp('crab', 32), ...rp('wick', 14)])] },
+      { name: 'EAST FORT', obj: 'Break the Brute in the fort', boss: [75, 0], line: 'Brute: "…LIQUIDATE…"', waves: () => [mx([...rp('crab', 30), ...rp('wick', 12)]), ['brute', ...mx([...rp('crab', 30), ...rp('wick', 14)])]] },
+      { name: 'SOUTH WALL', obj: 'Hold the wall', line: 'Warden: "Last stretch before the core."', waves: () => [mx([...rp('crab', 38), ...rp('wick', 16)]), mx([...rp('crab', 44), ...rp('wick', 22)])] },
+      { name: 'DIAMOND CORE', obj: 'Light the core', hold: 12, boss: [0, -8], line: 'Warden: "That\'s the heart of it. Light it up."', waves: () => [['brute', ...mx([...rp('crab', 30), ...rp('wick', 14)])]] } ] },
+};
+let MAP = MAPS.hertzflow, MAPID = 'hertzflow', PATHS = [];
+const landD = (x, z) => { let d = 1e9; for (const sh of MAP.land) d = Math.min(d, shapeD(sh, x, z)); for (const b of MAP.bars) d = Math.min(d, segD(x, z, [b[0], b[1]], [b[2], b[3]]) - 5.5); return d; };
+const pathD = (x, z, open = 99) => { let d = 1e9; for (const q of PATHS) if (q[5] <= open) d = Math.min(d, segD(x, z, [q[0], q[1]], [q[2], q[3]]) - q[4]); return d; };
+function clampTo(p, fn, lim) { for (let k = 0; k < 3; k++) { const d = fn(p.x, p.z); if (d <= lim) return; const e = .3, gx = fn(p.x + e, p.z) - fn(p.x - e, p.z), gz = fn(p.x, p.z + e) - fn(p.x, p.z - e), gl = Math.hypot(gx, gz) || 1; p.x -= gx / gl * (d - lim + .01); p.z -= gz / gl * (d - lim + .01); } }
+function landSpawn(ang) { const zp = zayn.position; // canopy edge first (land, off-path), any land as fallback — never open water
+  for (let k = 0; k < 28; k++) { const a = (ang ?? Math.random() * 6.28) + (Math.random() - .5) * (k < 14 ? 1.2 : 6.28), d = 13 + Math.random() * 14, x = zp.x + Math.cos(a) * d, z = zp.z + Math.sin(a) * d;
+    if (landD(x, z) < -2 && (k > 16 || pathD(x, z) > 1)) return new THREE.Vector3(x, 0, z); }
+  const v = zp.clone(); v.x += (Math.random() - .5) * 8; v.z += (Math.random() - .5) * 8; return v; }
+const mapG = new THREE.Group(); arena.add(mapG);
+const beacon = new THREE.Group(); { const b = new THREE.Mesh(new THREE.CylinderGeometry(1.2, 1.2, 30, 10, 1, true), glow(SKY)); b.material.opacity = .25; b.position.y = 15; const rr = new THREE.Mesh(new THREE.TorusGeometry(5, .15, 6, 40), glow(SKY)); rr.rotation.x = Math.PI / 2; rr.position.y = .5; beacon.add(b, rr); } beacon.visible = false; arena.add(beacon);
+const fires = []; let canopyIM = null;
+const TREE_G = mergeG([new THREE.IcosahedronGeometry(1.7, 0).scale(1, .7, 1).translate(0, 2.6, 0), new THREE.IcosahedronGeometry(1.2, 0).scale(1, .7, 1).translate(.9, 3.3, .5), new THREE.CylinderGeometry(.18, .28, 2, 5).translate(0, 1, 0)]);
+function buildMap(id) { MAP = MAPS[id]; MAPID = id; SECTIONS = MAP.sections;
+  PATHS = MAP.path; for (const c of [...mapG.children]) { mapG.remove(c); c.traverse(o => { if (o.geometry && o.geometry !== TREE_G && o.geometry !== PLANE) o.geometry.dispose(); }); } fires.length = 0;
+  const flat = (geo, col, y, o = {}) => { const m = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ color: col, roughness: .95, ...o })); m.position.y = y; mapG.add(m); return m; };
+  const water = flat(new THREE.PlaneGeometry(1400, 1400).rotateX(-Math.PI / 2), MAP.water, -.6, { roughness: .25, metalness: .3 });
+  const shapes = [...MAP.land, ...MAP.bars.map(b => CAP(b[0], b[1], b[2], b[3], 5.5, { bar: 1 }))];
+  for (const sh of shapes) { flat(outline(sh, 8), MAP.reef, -.45, { transparent: true, opacity: .45, roughness: .2 }); flat(outline(sh, 1.8), MAP.sand, -.15); if (!sh.bar) flat(outline(sh, 0), sh.sparse ? MAP.sand : MAP.ground, 0); }
+  for (const q of PATHS) flat(outline(CAP(q[0], q[1], q[2], q[3], q[4]), 0), MAP.path, .12); // packed sand/stone trail = the walkable A→B path
+  // canopy: instanced low-poly trees packed on land outside the path (the walls the Static pours from)
+  const pts = []; for (const sh of MAP.land) { const bb = sh.t === 'cap' ? [Math.min(sh.a[0], sh.b[0]) - sh.r, Math.max(sh.a[0], sh.b[0]) + sh.r, Math.min(sh.a[1], sh.b[1]) - sh.r, Math.max(sh.a[1], sh.b[1]) + sh.r] : [sh.c[0] - sh.h * 1.42, sh.c[0] + sh.h * 1.42, sh.c[1] - sh.h * 1.42, sh.c[1] + sh.h * 1.42];
+    const step = sh.sparse ? 6 : 2.7; for (let x = bb[0]; x < bb[1]; x += step) for (let z = bb[2]; z < bb[3]; z += step) { const px = x + (Math.random() - .5) * step * .8, pz = z + (Math.random() - .5) * step * .8;
+      if (shapeD(sh, px, pz) < -1 && pathD(px, pz) > (sh.sparse ? 2 : .6)) pts.push([px, pz, sh.dark]); } }
+  canopyIM = new THREE.InstancedMesh(TREE_G, new THREE.MeshStandardMaterial({ roughness: .9, flatShading: true }), pts.length); const o = new THREE.Object3D(), col = new THREE.Color();
+  pts.forEach(([x, z, dk], i) => { o.position.set(x, 0, z); o.rotation.y = Math.random() * 6.28; o.scale.setScalar(.8 + Math.random() * .7); o.updateMatrix(); canopyIM.setMatrixAt(i, o.matrix);
+    col.setHex(MAP.canopy[i % MAP.canopy.length]).offsetHSL((Math.random() - .5) * .04, 0, (Math.random() - .5) * .08); if (dk) col.multiplyScalar(.62); canopyIM.setColorAt(i, col); });
+  mapG.add(canopyIM);
+  if (MAP.storm) { // ruins + fire accents
+    const ruin = M(0x2a2a2e, 0, { roughness: .9 }); for (const sh of MAP.land) for (let k = 0; k < 4; k++) { const a = k * 1.57 + .7, d = sh.h * .7, b = new THREE.Mesh(new THREE.BoxGeometry(3 + Math.random() * 3, 2 + Math.random() * 5, 3 + Math.random() * 3), ruin); b.position.set(sh.c[0] + Math.cos(a) * d, 1.5, sh.c[1] + Math.sin(a) * d); b.rotation.y = Math.random(); if (pathD(b.position.x, b.position.z) > 3) mapG.add(b); }
+    for (const sh of MAP.land) for (let k = 0; k < 2; k++) { const a = Math.random() * 6.28, d = sh.h * (.5 + Math.random() * .4), f = sprite(ORB, 0xff7a1a, 7, 7, .9); f.position.set(sh.c[0] + Math.cos(a) * d, 2.5, sh.c[1] + Math.sin(a) * d); mapG.add(f); fires.push(f); } }
+  tower.position.set(MAP.gate[0], 0, MAP.gate[1]); scene.fog.color.set(MAP.fog); scene.background = new THREE.Color(MAP.fog);
+  $('#mission b').textContent = MAP.name; }
+let lightningT = 3; const hemi = scene.children.find(o => o.isHemisphereLight);
+function stepMap(dt) { if (!arena.visible) return;
+  for (const [i, f] of fires.entries()) { const k = 1 + Math.sin(S.t * 13 + i * 3) * .15 + Math.sin(S.t * 31 + i) * .08; f.scale.set(7 * k, 1, 7 * k); if (Math.random() < .08) burst(f.position.clone().setY(3), [0xff7a1a, 0xffc24a], 1, 2, 3, -3); }
+  if (MAP.storm) { lightningT -= dt; if (lightningT < 0) { lightningT = 4 + Math.random() * 5; $('#flash').style.transition = 'none'; $('#flash').style.opacity = .55; hemi.intensity = 3.2; sfx('boom');
+      setTimeout(() => { $('#flash').style.transition = 'opacity .5s'; $('#flash').style.opacity = 0; hemi.intensity = .55; }, 90); } } }
+for (const o of [arena.children[0], arena.children[1]]) o.visible = false; // old circular floor + edge ring hidden
 
 // ===== shared Static shader (red-magenta, noise flicker) =====
 const U = { uTime: { value: 0 } };
@@ -418,7 +494,7 @@ const COST = { chain: 15, roar: 30 };
 const rep = (t, n) => Array(n).fill(t);
 const mix = w => w.sort(() => Math.random() - .5);
 // Mission 01 is cut into 3 sectioned levels on the Ember Dot island; each has its own tint, objective and wave plan
-const SECTIONS = [
+let SECTIONS = [
   { name: 'SHORE LANDING', obj: 'Clear the beach', floor: 0xa49c8c, edge: 0xffd08a, line: 'Warden: "Those are crabs. Ugly. Easy. Hit them."',
     waves: () => [mix(rep('crab', 24)), mix([...rep('crab', 30), ...rep('wick', 10)])] },
   { name: 'TOWER RIDGE', obj: 'Restore Signal Tower 1', floor: 0x5a7378, edge: 0x4DB8FF, hold: 15, line: 'Warden: "Stand in the ring. Keep the Tower breathing."',
@@ -432,7 +508,7 @@ const banner = (t, c = '#fff') => { const b = $('#banner'); b.textContent = t; b
 const fade = (on) => $('#fade').style.opacity = on ? 1 : 0;
 const show = (id, on) => $(id).classList.toggle('hide', !on);
 const BG_DAY = new THREE.Color(0xffc49a), BG_DARK = new THREE.Color(0x0a0c12);
-function setArena(on) { const zc = MODELS.zayn && MODELS.zayn.userData.combat; if (zc) zc(on); arena.visible = on; decor.forEach(o => o.visible = !on); ocean.visible = !on; scene.background = on ? BG_DARK : BG_DAY; scene.fog.color.set(on ? 0x0a0c12 : 0xffd2a8); scene.fog.near = on ? 60 : 90; scene.fog.far = on ? 140 : 320; sky.visible = !on; }
+function setArena(on) { const zc = MODELS.zayn && MODELS.zayn.userData.combat; if (zc) zc(on); arena.visible = on; decor.forEach(o => o.visible = !on); ocean.visible = !on; scene.background = on ? new THREE.Color(MAP.fog) : BG_DAY; scene.fog.color.set(on ? MAP.fog : 0xffd2a8); scene.fog.near = on ? 70 : 90; scene.fog.far = on ? 170 : 320; hemi.intensity = on ? (MAP.storm ? .55 : .75) : 1.1; sun.intensity = on ? (MAP.storm ? .6 : 1.1) : 1.9; sky.visible = !on; }
 
 function clearField() { enemies.forEach(e => e.mesh && scene.remove(e.mesh)); enemies.length = 0; gems.length = 0; nums.length = 0; decals.forEach(d => scene.remove(d.m)); decals.length = 0; }
 function startCine() {
@@ -445,40 +521,43 @@ function startBoat() { S.mode = 'cine'; S.t = 0; clouds.visible = false; scene.f
 function landOnBeach() {
   if (S.mode !== 'cine') return; S.mode = 'fading'; fade(1);
   setTimeout(() => {
-    boat.visible = false; boat.remove(zayn); scene.add(zayn); zayn.position.set(0, .3, 0); S.yaw = Math.PI; setArena(true);
+    boat.visible = false; boat.remove(zayn); scene.add(zayn); buildMap(MAPID); S.yaw = Math.PI; setArena(true);
     Object.assign(S, { hp: CH.hp, en: 40, score: 0, kills: 0, xp: 0, wave: 0, iframes: 0, buff: 0, spawnQ: [], waveNext: 0, cd: { wave: 0, chain: 0, roar: 0, dodge: 0 } });
-    cam.position.set(0, 30, 22); show('#cine', false); show('#hud', true);
+    show('#cine', false); show('#hud', true);
     startSection(0, true);
   }, 1000);
 }
 function secHud() { const c = SECTIONS[S.sec]; $('#secName').textContent = `${S.sec + 1}/${SECTIONS.length} · ${c.name}`;
   $('#secDots').innerHTML = SECTIONS.map((_, i) => `<i class="${i < S.sec ? 'done' : i === S.sec ? 'cur' : ''}"></i>`).join('');
   $('#obj').textContent = c.hold ? `${c.obj} — hold the ring ${Math.min(c.hold, S.hold).toFixed(0)}/${c.hold}s · wave ${S.wave}/${WAVES.length}` : `${c.obj} — wave ${S.wave}/${WAVES.length}`; }
-function startSection(i, fromBoat = false) { // entering a section: (fade already black) reset field, tint ground, fade in, banner card
-  const c = SECTIONS[i]; clearField(); waves.length = 0; S.sec = i; S.wave = 0; S.hold = 0; S.spawnQ = []; S.waveNext = 0; S.secDone = false; WAVES = c.waves();
-  S.hp = CH.hp; S.iframes = 1.5; S.frenzy = 0; S.vel = new THREE.Vector3(); S.buff = 0; S.cd = { wave: 0, chain: 0, roar: 0, dodge: 0 }; if (fromBoat) Object.assign(S, { en: 40, score: 0, kills: 0, xp: 0 }); else S.en = Math.max(S.en, 40);
-  floorM.color.set(c.floor); edgeM.color.set(c.edge); tower.visible = !!c.hold; zayn.position.set(0, .3, c.hold ? 3 : 0); S.secStart = { score: S.score, kills: S.kills, xp: S.xp }; secHud();
-  setTimeout(() => { fade(0); S.mode = 'play'; banner(fromBoat ? `MISSION 01 · ${CH.name}` : `SECTION ${i + 1} · ${c.name}`, '#4DB8FF');
-    setTimeout(() => { if (S.sec === i && S.mode === 'play') { banner(c.name, '#ffc83d'); $('#line').textContent = c.line; $('#line').style.opacity = 1; setTimeout(() => $('#line').style.opacity = 0, 3200); } }, 1500);
-    setTimeout(() => { if (S.sec === i && S.mode === 'play' && !S.wave) nextWave(); }, 2600); }, 600); }
+function startSection(i, fromBoat = false, jump = false) { // sections are stretches of one continuous A→B path; boat drop + retries fade in at the section's entry
+  const c = SECTIONS[i]; waves.length = 0; S.sec = i; S.open = i; S.wave = 0; S.hold = 0; S.spawnQ = []; S.waveNext = 0; S.secDone = false; S.await = null; WAVES = c.waves(); beacon.visible = false;
+  if (fromBoat || jump) { clearField(); S.hp = CH.hp; S.vel = new THREE.Vector3(); const p = i === 0 ? MAP.start : MAP.trig[i]; zayn.position.set(p[0], .3, p[1]); cam.position.set(p[0] + ISO.x, ISO.y, p[1] + ISO.z - 6); }
+  S.iframes = 1.5; S.frenzy = 0; S.buff = 0; S.cd = { wave: 0, chain: 0, roar: 0, dodge: 0 }; if (fromBoat) Object.assign(S, { en: 40, score: 0, kills: 0, xp: 0 }); else S.en = Math.max(S.en, 40); S.hp = Math.min(CH.hp, S.hp + CH.hp * .4);
+  tower.visible = !!c.hold; S.secStart = { score: S.score, kills: S.kills, xp: S.xp }; secHud();
+  const go = () => { S.mode = 'play'; banner(fromBoat ? `${MAP.name} · ${CH.name}` : `${i + 1}/${SECTIONS.length} · ${c.name}`, '#4DB8FF');
+    setTimeout(() => { if (S.sec === i && S.mode === 'play') { banner(c.name, '#ffc83d'); $('#line').textContent = c.line; $('#line').style.opacity = 1; setTimeout(() => $('#line').style.opacity = 0, 3200); } }, 1300);
+    setTimeout(() => { if (S.sec === i && S.mode === 'play' && !S.wave) nextWave(); }, fromBoat || jump ? 2600 : 1200); };
+  if (fromBoat || jump) setTimeout(() => { fade(0); go(); }, 600); else go(); }
 function sectionClear() { if (S.secDone) return; S.secDone = true;
   if (S.sec >= SECTIONS.length - 1) return win();
-  S.mode = 'clear'; banner(`${SECTIONS[S.sec].name} CLEARED`, '#4DB8FF'); ring(zayn.position, SKY, 30, .8, .3, .06);
-  setTimeout(() => { fade(1); S.mode = 'clear'; setTimeout(() => startSection(S.sec + 1), 900); }, 1800); }
-window.__section = i => { fade(1); S.mode = 'clear'; setTimeout(() => startSection(i), 50); };
+  const n = S.sec + 1, t = MAP.trig[n]; S.open = n; S.await = n; banner(`${SECTIONS[S.sec].name} CLEARED`, '#4DB8FF'); ring(zayn.position, SKY, 30, .8, .3, .06);
+  beacon.position.set(t[0], 0, t[1]); beacon.visible = true; $('#obj').textContent = `Path open — head to ${SECTIONS[n].name} ▸`; }
+window.__section = i => { fade(1); S.mode = 'clear'; setTimeout(() => startSection(i, false, true), 50); };
+window.__map = id => { MAPID = id; }; window.__trig = () => MAP.trig[S.await]; window.__tp = (x, z) => { zayn.position.set(x, .3, z); }; window.__gate = () => MAP.gate; window.__kill = () => [...enemies].forEach(kill);
 function nextWave() {
   if (S.wave >= WAVES.length) return;
   S.spawnQ = [...WAVES[S.wave]]; S.wave++; secHud();
   banner(`WAVE ${S.wave} · ${S.spawnQ.length} STATIC`, '#ff3cac');
 }
 function spawn(type, ang) { const T = TYPES[type], a = ang ?? Math.random() * 6.28, r = ARENA + 2;
-  const e = { type, T, pos: new THREE.Vector3(zayn.position.x + Math.cos(a) * 30, 0, zayn.position.z + Math.sin(a) * 30), hp: T.hp * (1 + (S.sec || 0) * .35 + Math.max(0, S.wave - 1) * .15), mhp: T.hp * (1 + (S.sec || 0) * .35 + Math.max(0, S.wave - 1) * .15), stun: 0, kb: new THREE.Vector3(), atk: 0, hit: 0, tel: 0, yaw: 0, mesh: type === 'crab' ? null : makeMesh(type) };
-  const l = Math.hypot(e.pos.x, e.pos.z); if (l > r) e.pos.multiplyScalar(r / l);
+  const bs = type === 'brute' && SECTIONS[S.sec] && SECTIONS[S.sec].boss, e = { type, T, pos: bs ? new THREE.Vector3(bs[0], 0, bs[1]) : landSpawn(ang), hp: T.hp * (1 + (S.sec || 0) * .35 + Math.max(0, S.wave - 1) * .15), mhp: T.hp * (1 + (S.sec || 0) * .35 + Math.max(0, S.wave - 1) * .15), stun: 0, kb: new THREE.Vector3(), atk: 0, hit: 0, tel: 0, yaw: 0, mesh: type === 'crab' ? null : makeMesh(type) };
+  
   if (type === 'brute') { e.mesh.scale.setScalar(1.15); banner('RED CANDLE BRUTE', '#ff2a5a'); }
   enemies.push(e); burst(e.pos.clone().setY(1), [0xff1450, 0xa24cff], 10, 5, 4);
 }
 function best() { const b = Math.max(+localStorage.getItem('sw_best') || 0, S.score); localStorage.setItem('sw_best', b); return b; }
-function win() { addMerits(S.xp + 100); S.mode = 'end'; setTimeout(() => { show('#retry', false); tower.visible = false; $('#endT').textContent = 'MISSION COMPLETE'; $('#endT').style.color = '#4DB8FF'; $('#endS').textContent = `Ember Dot secured · ${S.kills} Static cleared · ${S.xp} gems · score ${S.score} · best ${best()}. Next: Moonleaf Oval. +${S.xp + 100} Merits (◆ ${merits()}).`; show('#end', true); }, 900); }
+function win() { addMerits(S.xp + 100); S.mode = 'end'; setTimeout(() => { show('#retry', false); tower.visible = false; $('#endT').textContent = 'MISSION COMPLETE'; $('#endT').style.color = '#4DB8FF'; $('#endS').textContent = `${MAP.name} secured · ${S.kills} Static cleared · ${S.xp} gems · score ${S.score} · best ${best()}. Next: Moonleaf Oval. +${S.xp + 100} Merits (◆ ${merits()}).`; show('#end', true); }, 900); }
 function lose() { addMerits(S.xp); S.mode = 'end'; banner('LIQUIDATED', '#ff2a5a'); setTimeout(() => { $('#endT').textContent = 'LIQUIDATED'; $('#endT').style.color = '#ff2a5a'; $('#endS').textContent = `${CH.name[0] + CH.name.slice(1).toLowerCase()} went down in ${SECTIONS[S.sec].name} · ${S.kills} kills · score ${S.score} · best ${best()}. Retry the section or run the mission back.`; show('#retry', true); show('#end', true); }, 1200); }
 
 const aimDir = () => new THREE.Vector3(Math.sin(S.yaw), 0, Math.cos(S.yaw));
@@ -570,12 +649,13 @@ document.querySelectorAll('.card.pick').forEach(el => el.onclick = () => { setCh
 document.querySelectorAll('.unlock').forEach(el => el.onclick = e => { e.stopPropagation(); const id = el.dataset.c, cost = UNLOCK_COST[id]; if (merits() < cost) return;
   localStorage.setItem('sw_merits', merits() - cost); localStorage.setItem('sw_owned', JSON.stringify([...owned(), id].filter(x => !STARTERS.includes(x)))); renderCards(); }); }
 renderCards();
+document.querySelectorAll('#modes button[data-m]').forEach(b => b.onclick = () => { MAPID = b.dataset.m; document.querySelectorAll('#modes button').forEach(x => x.classList.toggle('on', x === b)); });
 $('.tag').textContent += (+localStorage.getItem('sw_best') ? `  ·  Best score ${localStorage.getItem('sw_best')}` : '');
 window.__merits = n => { addMerits(n); renderCards(); };
 window.__pick = id => { setChar(id); startCine(); };
 setChar('lyra'); if ('ontouchstart' in window || navigator.maxTouchPoints > 0) document.body.classList.add('touch');
 $('#skip').onclick = () => { if (S.mode === 'over') startBoat(); landOnBeach(); };
-$('#retry').onclick = () => { show('#end', false); fade(1); S.mode = 'clear'; const s0 = S.secStart; setTimeout(() => { Object.assign(S, s0); startSection(S.sec); }, 600); };
+$('#retry').onclick = () => { show('#end', false); fade(1); S.mode = 'clear'; const s0 = S.secStart; setTimeout(() => { Object.assign(S, s0); startSection(S.sec, false, true); }, 600); };
 $('#again').onclick = () => { show('#end', false); fade(1); setTimeout(() => { startCine(); fade(0); }, 600); };
 $('#menu').onclick = () => { show('#end', false); show('#hud', false); show('#title', true); renderCards(); S.mode = 'title'; setArena(false); clearField(); };
 
@@ -619,7 +699,7 @@ function tick(now) {
       zayn.position.addScaledVector(S.vel, dt); const spd = S.vel.length(); S.stride = (S.stride || 0) + spd * dt * .55;
       const hop = S.dodge > 0 ? Math.sin((1 - S.dodge / .18) * Math.PI) * 1.4 : Math.abs(Math.sin(S.stride * Math.PI)) * Math.min(1, spd / top) * .55; zayn.position.y = .3 + hop;
       const lean = Math.min(.28, spd / top * .22); zayn.rotation.x = lean * Math.cos(Math.atan2(S.vel.x, S.vel.z) - zayn.rotation.y) * (S.dodge > 0 ? 2 : 1);
-      zayn.scale.set(1, 1 + (S.land = Math.max(0, (S.land || 0) - dt * 6)) * -.18 + (S.dodge > 0 ? .1 : 0), 1); if (hop < .03 && spd > 3 && !S.wasDown) { S.land = .6; } S.wasDown = hop < .03; const pl = Math.hypot(zayn.position.x, zayn.position.z); if (pl > ARENA) { zayn.position.x *= ARENA / pl; zayn.position.z *= ARENA / pl; }
+      zayn.scale.set(1, 1 + (S.land = Math.max(0, (S.land || 0) - dt * 6)) * -.18 + (S.dodge > 0 ? .1 : 0), 1); if (hop < .03 && spd > 3 && !S.wasDown) { S.land = .6; } S.wasDown = hop < .03; clampTo(zayn.position, (x, z) => pathD(x, z, S.open ?? 0), 0);
       let dy = S.yaw - zayn.rotation.y; dy = Math.atan2(Math.sin(dy), Math.cos(dy)); zayn.rotation.y += dy * Math.min(1, dt * 40); // snap-to-face
       const ud = zayn.userData, w = spd > 2 ? Math.sin(S.stride * Math.PI) * .9 : 0; ud.legL.rotation.x = w; ud.legR.rotation.x = -w; ud.tail.rotation.z = Math.sin(S.t * 3) * .25; ud.core.rotation.y += dt * 3; tower.userData.core.rotation.y += dt * 1.5;
       S.swing = Math.max(0, S.swing - dt); ud.armR.rotation.x = S.swing > 0 ? -2.2 + (.2 - S.swing) * 16 : -.2 + w * .3;
@@ -631,7 +711,8 @@ function tick(now) {
         if (c.hold && S.hold < c.hold) { if (enemies.length < 10) S.spawnQ.push(...rep('crab', 8)); } // keep pressure until the tower is restored
         else if (!enemies.length) { S.waveNext += dt; if (S.waveNext > 1) sectionClear(); } }
       else if (!enemies.length && S.wave) { S.waveNext += dt; if (S.waveNext > 1.5) { S.waveNext = 0; nextWave(); } }
-      { const c = SECTIONS[S.sec]; if (c.hold && S.hold < c.hold) { if (Math.hypot(zayn.position.x - tower.position.x, zayn.position.z - tower.position.z) < 5) { S.hold += dt; if (S.hold >= c.hold) { banner('TOWER 1 RESTORED', '#4DB8FF'); ring(tower.position, SKY, 40, 1, .4, .08); } } if ((S.t * 4 | 0) !== (S.lt | 0)) { S.lt = S.t * 4; secHud(); } } }
+      if (S.await != null) { const t = MAP.trig[S.await]; if (Math.hypot(zayn.position.x - t[0], zayn.position.z - t[1]) < 8) startSection(S.await); }
+      { const c = SECTIONS[S.sec]; if (c.hold && S.hold < c.hold) { if (Math.hypot(zayn.position.x - tower.position.x, zayn.position.z - tower.position.z) < 5) { S.hold += dt; if (S.hold >= c.hold) { S.spawnQ.length = 0; banner('GATE LIT', '#4DB8FF'); ring(tower.position, SKY, 40, 1, .4, .08); } } if ((S.t * 4 | 0) !== (S.lt | 0)) { S.lt = S.t * 4; secHud(); } } }
     }
     // enemies: swarm toward player with simple separation
     const zp = zayn.position;
@@ -647,7 +728,9 @@ function tick(now) {
           e.atk -= dt; if (d < e.T.r + 1.6 && e.atk <= 0) { e.atk = 1.1; hurt(e.T.dmg); } } }
       // separation (cheap: check few neighbours)
       for (let k = 1; k <= 5; k++) { const o = enemies[(i + k * 7) % enemies.length]; if (o === e) continue; const dx = e.pos.x - o.pos.x, dz = e.pos.z - o.pos.z, dd = dx * dx + dz * dz, rr = e.type === 'crab' && o.type === 'crab' ? 4.0 : (e.T.r + o.T.r) * 1.1; if (dd < rr * rr && dd > 1e-4) { const s = (rr - Math.sqrt(dd)) * .5 / Math.sqrt(dd); e.pos.x += dx * s; e.pos.z += dz * s; } }
-      e.pos.addScaledVector(e.kb, dt); e.kb.multiplyScalar(Math.pow(.02, dt)); e.hit -= dt;
+      const px0 = e.pos.x, pz0 = e.pos.z; e.pos.addScaledVector(e.kb, dt); clampTo(e.pos, landD, -1);
+      if (e.type !== 'brute') { const mv = Math.hypot(e.pos.x - (e.lx ?? px0), e.pos.z - (e.lz ?? pz0)), far = Math.hypot(e.pos.x - zayn.position.x, e.pos.z - zayn.position.z) > 7; e.stuckT = far && mv < e.T.sp * dt * .25 ? (e.stuckT || 0) + dt : 0; e.lx = e.pos.x; e.lz = e.pos.z;
+        if (e.stuckT > 2.5) { e.stuckT = 0; e.pos.copy(landSpawn()); } } // shoreline-stuck Static re-emerge from canopy near the player e.kb.multiplyScalar(Math.pow(.02, dt)); e.hit -= dt;
       if (e.mesh) { const pulse = e.tel > 0 ? 1 + Math.sin(S.t * 40) * .08 : 1; e.mesh.position.set(e.pos.x, e.type === 'wick' ? Math.abs(Math.sin(S.t * 16 + i)) * .35 : 0, e.pos.z); if (e.type === 'wick') { const ph = Math.sin(S.t * 16 + i) * .9; e.mesh.userData['l-1'].rotation.x = ph; e.mesh.userData.l1.rotation.x = -ph; } e.mesh.rotation.y = e.yaw + (e.stun > 0 ? S.t * 8 : 0); e.mesh.scale.setScalar((e.type === 'brute' ? 1.15 : 1) * (e.hit > 0 ? 1.25 : pulse)); } }
     // write crab instances
     let c = 0;
@@ -688,7 +771,7 @@ function tick(now) {
     document.querySelectorAll('.p').forEach(b => { const p = b.dataset.p; const cdp = S.cd[p] / CD[p] * 100; b.style.setProperty('--cdp', cdp + '%'); b.classList.toggle('ready', cdp <= 0 && !(COST[p] && S.en < COST[p])); b.style.opacity = COST[p] && S.en < COST[p] ? .5 : 1; });
   }
   if (arena.visible) { for (let i = 0; i < DUSTN; i++) { dustPos[i * 3] += Math.sin(S.t * .3 + i) * dt * .6 + dt * .4; dustPos[i * 3 + 1] += Math.cos(S.t * .5 + i * 1.7) * dt * .2; if (dustPos[i * 3] > 55) dustPos[i * 3] = -55; } dustG.attributes.position.needsUpdate = true; }
-  stepParticles(dt); stepFx(dt); drawOverlay(dt);
+  stepMap(dt); stepParticles(dt); stepFx(dt); drawOverlay(dt);
   R.render(scene, cam); requestAnimationFrame(tick);
 }
 function hurt(d) { if (S.iframes > 0 || S.mode !== 'play') return; sfx('hurt'); S.hp -= S.buff > 0 ? d * .4 : d; S.shake = Math.max(S.shake, .25); burst(zayn.position.clone().setY(2), [0xff2a5a, 0xffffff], 18, 7, 5); floatTxt(zayn.position, '-' + d, false, '#ff4a5a'); if (S.hp <= 0) { S.hp = 0; lose(); } }

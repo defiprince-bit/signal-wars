@@ -82,3 +82,8 @@ body:not(.touch) #stick{display:none}
 .card.locked{filter:grayscale(.85);opacity:.7}.card.locked .port{background:#0a1220;border:2px solid #fff3;display:grid;place-items:center;width:64px;height:64px;border-radius:50%;font-size:24px}
 .card .unlock{pointer-events:auto;cursor:pointer;border:1px solid var(--cc);background:#0008;color:var(--cc);font-weight:800;padding:6px 14px;border-radius:20px;font-size:12px}
 .card .unlock:disabled{opacity:.5;cursor:default}
+
+#flash{position:fixed;inset:0;background:#dfe9ff;opacity:0;pointer-events:none;z-index:5;mix-blend-mode:screen}
+#modes{display:flex;gap:8px;margin:2px 0 8px;flex-wrap:wrap;justify-content:center}
+#modes button{pointer-events:auto;cursor:pointer;background:#0a1220cc;color:#cfe;border:1px solid #4DB8FF66;border-radius:6px;padding:7px 14px;font-weight:800;letter-spacing:2px;font-size:12px}
+#modes button.on{background:#4DB8FF;color:#021;border-color:#4DB8FF}#modes button:disabled{opacity:.4;cursor:default}

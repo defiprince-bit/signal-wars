@@ -72,3 +72,7 @@ An **Epoch** = one real-world week.
 - Saved in `localStorage` for the MVP; server leaderboard later.
 - Rewards = **Merits** (one currency) → cosmetics and character unlocks only. No pay-to-win, no real money.
 - No crafting, no inventory, no open world. Every mission is a hand-built 5–10 min run.
+
+## Logo-map beats
+- HertzFlow: Drop Shore → Left Pill → H Bridge (Brute) → Right Pill → Extract Gate.
+- Binance Siege: storm landing → diamond channels → East Fort (Brute: "LIQUIDATE") → outer L → Diamond Core.
