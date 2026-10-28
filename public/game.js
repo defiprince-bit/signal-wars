@@ -514,9 +514,12 @@ function clearField() { enemies.forEach(e => e.mesh && scene.remove(e.mesh)); en
 function startCine() {
   $('#title').classList.remove('on'); show('#title', false); show('#cine', true); show('#hud', false); show('#end', false);
   S.mode = 'over'; S.t = 0; boat.visible = false; setArena(false); clearField(); shield.visible = false; clouds.visible = true; scene.fog.far = 2000;
-  $('#cineText').textContent = 'HERTZFLOW ARCHIPELAGO'; $('#cineSub').textContent = 'Ember Dot · Moonleaf Oval · The h · Tidering Oval · Gold Dot';
+  // overview flies the selected map's logo silhouette (green canopy), not the old archipelago
+  buildMap(MAPID); arena.visible = true; decor.forEach(o => o.visible = false); ocean.visible = false; scene.background = new THREE.Color(MAP.fog);
+  { const bb = new THREE.Box3(); mapG.children.forEach(c => { if (c.geometry && c.geometry.type !== 'PlaneGeometry') bb.expandByObject(c); }); const c = bb.getCenter(new THREE.Vector3()), sz = bb.getSize(new THREE.Vector3()); S.ovC = [c.x, c.z]; S.ovR = Math.max(sz.x, sz.z); }
+  $('#cineText').textContent = MAPID === 'binance' ? 'BINANCE SIEGE' : 'HERTZFLOW'; $('#cineSub').textContent = MAPID === 'binance' ? 'Storm over the diamond · land at A, break the core' : 'Drop Shore · Left Pill · H Bridge · Right Pill · Extract Gate';
 }
-function startBoat() { S.mode = 'cine'; S.t = 0; clouds.visible = false; scene.fog.far = 320; $('#cineText').textContent = 'ALMOST THERE';
+function startBoat() { S.mode = 'cine'; S.t = 0; clouds.visible = false; setArena(false); scene.fog.far = 320; $('#cineText').textContent = 'ALMOST THERE';
   boat.visible = true; boat.position.set(0, 0, 230); boat.rotation.y = Math.PI; boat.add(zayn); zayn.position.set(0, .9, -1); zayn.rotation.set(0, 0, 0); zayn.scale.set(1, 1, 1); }
 function landOnBeach() {
   if (S.mode !== 'cine') return; S.mode = 'fading'; fade(1);
@@ -673,7 +676,7 @@ function tick(now) {
   if (S.mode === 'title') { const r = 70; cam.fov = 60; cam.updateProjectionMatrix(); cam.position.set(Math.cos(S.t * .1) * r, 22, Math.sin(S.t * .1) * r); cam.lookAt(0, 3, 0); }
   else if (S.mode === 'over' || S.mode === 'overfade') { // aerial overview: archipelago reads as the HertzFlow mark, camera dives through clouds
     const k = Math.min(1, S.t / 5), e = k * k * (3 - 2 * k); cam.fov = 55; cam.updateProjectionMatrix();
-    cam.position.set(Math.sin(S.t * .15) * 20, 460 - e * 300, 120 - e * 40); cam.lookAt(10, 0, -95 + e * 30); const cv = Math.max(0, (k - .6) / .4); cover.forEach(c => c.material.opacity = cv * .95);
+    { const [ox, oz] = S.ovC || [0, 0], R = Math.max(120, S.ovR || 200); cam.position.set(ox + Math.sin(S.t * .15) * 15, R * 1.6 - e * R * .7, oz + R * .35 - e * R * .1); cam.lookAt(ox, 0, oz + e * 10); } const cv = Math.max(0, (k - .6) / .4); cover.forEach(c => c.material.opacity = cv * .95);
     if (S.t > 4.4 && S.mode === 'over') { S.mode = 'overfade'; fade(1); setTimeout(() => { if (S.mode === 'overfade') { startBoat(); fade(0); } }, 700); }
   }
   else if (S.mode === 'cine' || S.mode === 'fading') { boat.userData.wake.forEach((w, i) => { w.material.opacity = (i < 2 ? .3 : .45) + Math.sin(S.t * 9 + i) * .08; });
