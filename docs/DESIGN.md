@@ -90,3 +90,10 @@ Charcoal shell; magenta only as a thin fresnel rim + glitch fringe. Big cyan-whi
 - Binance: same green islands, storm grade (dark teal water, lightning, fires); diamond channels A→B, outer L's → DIAMOND CORE finale (hold 12s).
 - Spawns come out of the canopy edge (sides/front/behind), never from open ocean. Enemies clamped to land; stuck ones re-emerge.
 - Ground/path kept muted; arena lighting dimmed (storm darker).
+
+## Intro timing (locked)
+Overview+clouds = 10.0s: 0–3s high hold on the selected logo map + Shore→Extract breadcrumb; 3–7.5s slow orbit with drifting/breathing clouds; 7.5–10s dive, cover thickens → fade → boat. Skip anytime; timeline runs on clamped frame time, so slow loads hold rather than cut.
+Boat: longer hull, raked windshield, outboard cowling, soft bob/roll, denser wake + hull/bow foam. Water: deeper teal, slower swell, subtle speculars.
+
+## Class cards (Bone King layout)
+Gold/charcoal plate, mini silhouette, role chip, 1-liner, 3 kit icons (wave/chain/roar), hard gold select border. Starters: Lyra · Scout, Hertzling · Spirit, Chado · Blade. Locked cards show "—" until tease lines land.

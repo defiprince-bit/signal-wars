@@ -24,7 +24,7 @@ const sky = new THREE.Group(); scene.add(sky);
 { const s = new THREE.Mesh(new THREE.CircleGeometry(40, 32), new THREE.MeshBasicMaterial({ color: 0xffb347, fog: false })); s.position.set(-300, 70, -900); s.lookAt(0, 0, 0); scene.add(s); }
 // ocean
 const oceanG = new THREE.PlaneGeometry(700, 700, 120, 120); oceanG.rotateX(-Math.PI / 2);
-const ocean = new THREE.Mesh(oceanG, new THREE.MeshStandardMaterial({ color: 0x0f8fb8, roughness: .12, metalness: .35, flatShading: true, transparent: true, opacity: .95, emissive: 0x03263a }));
+const ocean = new THREE.Mesh(oceanG, new THREE.MeshStandardMaterial({ color: 0x0a6a80, roughness: .18, metalness: .45, flatShading: true, transparent: true, opacity: .96, emissive: 0x021a26 }));
 ocean.position.y = -0.4; scene.add(ocean);
 const oBase = Float32Array.from(oceanG.attributes.position.array);
 // island (Ember Dot) + background HertzFlow-mark islets
@@ -265,23 +265,24 @@ function setChar(id) { CHID = id; CH = CHARS[id]; for (const c of [...zayn.child
   CD.wave = CH.wave.cd; document.querySelectorAll('.nm').forEach(n => n.textContent = CH.name); }
 // speedboat
 const boat = new THREE.Group();
-{ const plan = new THREE.Shape(); plan.moveTo(-1.8, -4.5); plan.lineTo(1.8, -4.5); plan.lineTo(1.9, 1.5); plan.quadraticCurveTo(1.6, 5, 0, 7.2); plan.quadraticCurveTo(-1.6, 5, -1.9, 1.5); plan.closePath();
+{ const plan = new THREE.Shape(); plan.moveTo(-1.8, -6); plan.lineTo(1.8, -6); plan.lineTo(1.95, 2); plan.quadraticCurveTo(1.6, 7, 0, 9.6); plan.quadraticCurveTo(-1.6, 7, -1.95, 2); plan.closePath();
   const hullG = new THREE.ExtrudeGeometry(plan, { depth: 1.3, bevelEnabled: true, bevelThickness: .35, bevelSize: .3, bevelSegments: 2, curveSegments: 10 }); hullG.rotateX(-Math.PI / 2); hullG.translate(0, -.5, 0);
   const hull = new THREE.Mesh(hullG, M(0xf4f6f8, 0, { roughness: .35, metalness: .2 }));
   const keel = new THREE.Mesh(hullG, M(0x0c1a2a, 0, { roughness: .4 })); keel.scale.set(.96, .45, .97); keel.position.y = -.55;
   const stripe = new THREE.Mesh(hullG, M(SKY, .8)); stripe.scale.set(1.02, .12, 1.01); stripe.position.y = .25;
-  const deck = new THREE.Mesh(new THREE.BoxGeometry(3, .12, 6), M(0x2a2f38, 0, { roughness: .8 })); deck.position.set(0, .86, -1);
-  const glass = new THREE.Mesh(new THREE.BoxGeometry(3.1, 1.1, .12), M(0x9fe8ff, .25, { transparent: true, opacity: .55, metalness: .6, roughness: .05 })); glass.position.set(0, 1.4, 2.2); glass.rotation.x = -.55;
-  const motor = new THREE.Mesh(new THREE.BoxGeometry(.9, 1.6, .9), M(0x14161c, 0, { metalness: .6, roughness: .3 })); motor.position.set(0, .9, -4.9);
-  const cowl = new THREE.Mesh(new THREE.BoxGeometry(.95, .25, .95), M(SKY, 1)); cowl.position.set(0, 1.75, -4.9);
+  const deck = new THREE.Mesh(new THREE.BoxGeometry(3, .12, 8.5), M(0x2a2f38, 0, { roughness: .8 })); deck.position.set(0, .86, -1.5);
+  const glass = new THREE.Mesh(new THREE.BoxGeometry(3.1, 1.1, .12), M(0x9fe8ff, .25, { transparent: true, opacity: .55, metalness: .6, roughness: .05 })); glass.position.set(0, 1.45, 2.6); glass.rotation.x = -1.0; const frame = new THREE.Mesh(new THREE.BoxGeometry(3.2, .1, .1), M(0x14161c, 0)); frame.position.set(0, 1.85, 2.3); boat.add(frame);
+  const motor = new THREE.Mesh(new THREE.BoxGeometry(.35, 1.9, .5), M(0x14161c, 0, { metalness: .6, roughness: .3 })); motor.position.set(0, .2, -6.6);
+  const cowl = new THREE.Mesh(new THREE.CapsuleGeometry(.6, .7, 4, 10), M(0x1a1d24, 0, { metalness: .5, roughness: .25 })); cowl.rotation.x = Math.PI / 2; cowl.scale.set(1, 1, .85); cowl.position.set(0, 1.55, -6.6); const cap = new THREE.Mesh(new THREE.BoxGeometry(1, .08, .9), M(SKY, 1)); cap.position.set(0, 2.05, -6.6); boat.add(cap);
   boat.add(keel, hull, stripe, deck, glass, motor, cowl);
   // wake: two foam ribbons + a center churn (shared additive sprite, no particles flood)
-  const foam = (x, rot) => { const w = sprite(STREAK, 0xcfeff5, 1.3, 30, .35); w.material.blending = THREE.NormalBlending; w.position.set(x, -.3, -19); w.rotation.y = Math.PI + rot; boat.add(w); return w; };
-  boat.userData.wake = [foam(-2.5, -.12), foam(2.5, .12), (() => { const c = sprite(ORB, 0xffffff, 5, 12, .8); c.position.set(0, -.2, -8); boat.add(c); return c; })()];
+  const foam = (x, rot) => { const w = sprite(STREAK, 0xcfeff5, 1.3, 30, .35); w.material.blending = THREE.NormalBlending; w.position.set(x, -.3, -24); w.rotation.y = Math.PI + rot; boat.add(w); return w; };
+  const blob = (x, z, sx, sz) => { const c = sprite(ORB, 0xf2fbff, sx, sz, .8); c.material.blending = THREE.NormalBlending; c.position.set(x, -.2, z); boat.add(c); return c; };
+  boat.userData.wake = [foam(-2.5, -.12), foam(2.5, .12), foam(-1.2, -.05), foam(1.2, .05), blob(0, -10, 5, 12), blob(-2.1, 3, 1.6, 7), blob(2.1, 3, 1.6, 7), blob(0, 9.4, 2.4, 1.6)]; // + hull-side & bow foam
   scene.add(boat); boat.visible = false; }
 // clouds for the overview descent (flat soft sprites, one shared texture)
-const cover = []; const clouds = new THREE.Group(); scene.add(clouds); clouds.visible = false;
-for (let i = 0; i < 26; i++) { const c = sprite(ORB, 0xffffff, 90 + Math.random() * 90, 60 + Math.random() * 60, .8); c.material.blending = THREE.NormalBlending; c.position.set((Math.random() - .5) * 360, 150 + Math.random() * 60, -80 + (Math.random() - .5) * 280); clouds.add(c); }
+const cover = []; const crumb = sprite(ORB, 0x9fffe0, 26, 26, 1); crumb.visible = false; const clouds = new THREE.Group(); scene.add(clouds); clouds.visible = false;
+for (let i = 0; i < 26; i++) { const c = sprite(ORB, 0xffffff, 90 + Math.random() * 90, 60 + Math.random() * 60, .8); c.material.blending = THREE.NormalBlending; c.position.set((Math.random() - .5) * 360, 150 + Math.random() * 60, -80 + (Math.random() - .5) * 280); c.userData.v = 3 + Math.random() * 5; c.userData.s = c.scale.clone(); c.userData.ph = Math.random() * 6; clouds.add(c); }
 for (let i = 0; i < 9; i++) { const c = sprite(ORB, 0xf4f8ff, 260, 200, .95); c.material.blending = THREE.NormalBlending; c.position.set((i % 3 - 1) * 110, 172 + i * 4, 60 + ((i / 3) | 0) * 60 - 60); clouds.add(c); cover.push(c); } // cover layer the camera dives into
 const deepSea = new THREE.Mesh(new THREE.PlaneGeometry(6000, 6000).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: 0x0b5f80 })); deepSea.position.y = -1.2; clouds.add(deepSea);
 
@@ -513,13 +514,13 @@ function setArena(on) { const zc = MODELS.zayn && MODELS.zayn.userData.combat; i
 function clearField() { enemies.forEach(e => e.mesh && scene.remove(e.mesh)); enemies.length = 0; gems.length = 0; nums.length = 0; decals.forEach(d => scene.remove(d.m)); decals.length = 0; }
 function startCine() {
   $('#title').classList.remove('on'); show('#title', false); show('#cine', true); show('#hud', false); show('#end', false);
-  S.mode = 'over'; S.t = 0; boat.visible = false; setArena(false); clearField(); shield.visible = false; clouds.visible = true; scene.fog.far = 2000;
+  S.mode = 'over'; S.t = 0; boat.visible = false; setArena(false); clearField(); shield.visible = false; clouds.visible = true; scene.fog.far = 2000; cover.forEach(c => c.material.opacity = 0); scene.add(crumb);
   // overview flies the selected map's logo silhouette (green canopy), not the old archipelago
   buildMap(MAPID); arena.visible = true; decor.forEach(o => o.visible = false); ocean.visible = false; scene.background = new THREE.Color(MAP.fog);
   { const bb = new THREE.Box3(); mapG.children.forEach(c => { if (c.geometry && c.geometry.type !== 'PlaneGeometry') bb.expandByObject(c); }); const c = bb.getCenter(new THREE.Vector3()), sz = bb.getSize(new THREE.Vector3()); S.ovC = [c.x, c.z]; S.ovR = Math.max(sz.x, sz.z); }
-  $('#cineText').textContent = MAPID === 'binance' ? 'BINANCE SIEGE' : 'HERTZFLOW'; $('#cineSub').textContent = MAPID === 'binance' ? 'Storm over the diamond · land at A, break the core' : 'Drop Shore · Left Pill · H Bridge · Right Pill · Extract Gate';
+  $('#cineText').textContent = MAPID === 'binance' ? 'BINANCE SIEGE' : 'HERTZFLOW'; $('#cineSub').textContent = MAPID === 'binance' ? 'SHORE ▸ West Channel ▸ East Fort ▸ Outer L ▸ CORE' : 'SHORE ▸ Left Pill ▸ H Bridge ▸ Right Pill ▸ EXTRACT';
 }
-function startBoat() { S.mode = 'cine'; S.t = 0; clouds.visible = false; setArena(false); scene.fog.far = 320; $('#cineText').textContent = 'ALMOST THERE';
+function startBoat() { crumb.visible = false; S.mode = 'cine'; S.t = 0; clouds.visible = false; setArena(false); scene.fog.far = 320; $('#cineText').textContent = 'ALMOST THERE';
   boat.visible = true; boat.position.set(0, 0, 230); boat.rotation.y = Math.PI; boat.add(zayn); zayn.position.set(0, .9, -1); zayn.rotation.set(0, 0, 0); zayn.scale.set(1, 1, 1); }
 function landOnBeach() {
   if (S.mode !== 'cine') return; S.mode = 'fading'; fade(1);
@@ -645,8 +646,14 @@ const ALL = new URLSearchParams(location.search).has('all');
 const merits = () => +localStorage.getItem('sw_merits') || 0, owned = () => new Set([...STARTERS, ...JSON.parse(localStorage.getItem('sw_owned') || '[]')]);
 const isOwned = id => ALL || owned().has(id);
 function addMerits(n) { localStorage.setItem('sw_merits', merits() + n); }
+const CLASS = { lyra: ['Scout', 'FAST FEET, GREEN BOLTS, ONE MOON RAIN.'], hertzling: ['Spirit', 'PULLS THE PACK, THEN BREAKS THE ECHO.'], chado: ['Blade', 'TWO BLADES, ONE DASH — THEY NEVER SEE IT.'],
+  kael: ['Guard', 'Line placeholder.'], warden: ['Warden', 'Line placeholder.'], bankyo: ['Vault', 'Line placeholder.'], zayn: ['Sniper', 'Line placeholder.'], hero: ['Founder', 'Line placeholder.'] };
+const SIL = col => `<svg viewBox="0 0 40 48" class="sil"><circle cx="20" cy="11" r="7" fill="${col}"/><path d="M8 46 L11 24 Q20 17 29 24 L32 46 Z" fill="${col}"/><path d="M29 26 L38 18" stroke="${col}" stroke-width="3"/></svg>`;
+const KIT = c => `<div class="kicons">${[['◆', c.wave.col, 'Wave'], ['◎', c.chain.col, c.chain.name], ['✦', c.roar.col, c.roar.name]].map(([g, col, t]) => `<span title="${t}" style="--k:#${new THREE.Color(col).getHexString()}">${g}</span>`).join('')}</div>`;
+function boneCard(id, c, own) { const [role, line] = CLASS[id] || ['Hero', 'Line placeholder.'];
+  return `<div class="card bk ${own ? 'pick' : 'locked'}" data-c="${id}" style="--cc:${c.col}"><div class="plate"><div class="port">${SIL(own ? c.col : '#3a3a40')}${own ? '' : '<em>🔒</em>'}</div><span class="role">${role}</span></div><h3>${c.name}</h3><p class="line">${own ? line : '—'}</p>${KIT(c)}${own ? '<b>SELECT</b>' : `<button class="unlock" data-c="${id}" ${merits() < UNLOCK_COST[id] ? 'disabled' : ''}>UNLOCK · ${UNLOCK_COST[id]} ◆</button>`}</div>`; }
 function renderCards() {
-$('.cards').innerHTML = Object.entries(CHARS).sort(([a], [b]) => isOwned(b) - isOwned(a)).map(([id, c]) => isOwned(id) ? `<div class="card pick" data-c="${id}" style="--cc:${c.col}"><div class="port" style="background:radial-gradient(circle at 35% 30%,${c.col},#0a1220 75%)">${c.name[0]}</div><h3>${c.name}</h3><small>${c.title}</small><p>${c.blurb}</p><div class="kit"><span>${c.chain.name}</span><span>${c.roar.name}</span></div><b>PLAY</b></div>` : `<div class="card locked" data-c="${id}" style="--cc:${c.col}"><div class="port">🔒</div><h3>${c.name}</h3><small>${c.title}</small><p>${c.blurb}</p><button class="unlock" data-c="${id}" ${merits() < UNLOCK_COST[id] ? 'disabled' : ''}>UNLOCK · ${UNLOCK_COST[id]} ◆</button></div>`).join('');
+$('.cards').innerHTML = Object.entries(CHARS).sort(([a], [b]) => isOwned(b) - isOwned(a)).map(([id, c]) => boneCard(id, c, isOwned(id))).join('');
 $('#merits') && ($('#merits').textContent = `◆ ${merits()} Merits`);
 document.querySelectorAll('.card.pick').forEach(el => el.onclick = () => { setChar(el.dataset.c); fade(1); setTimeout(() => { startCine(); fade(0); }, 600); });
 document.querySelectorAll('.unlock').forEach(el => el.onclick = e => { e.stopPropagation(); const id = el.dataset.c, cost = UNLOCK_COST[id]; if (merits() < cost) return;
@@ -669,18 +676,20 @@ function nearest(maxD) { let b = null, bd = maxD; for (const e of enemies) { con
 function tick(now) {
   const dt = Math.min(.05, (now - last) / 1000); last = now; S.t += dt; U.uTime.value = S.t;
   if (!arena.visible) { const a = oceanG.attributes.position.array;
-    for (let i = 0; i < a.length; i += 3) a[i + 1] = Math.sin(oBase[i] * .08 + S.t * 1.4) * .35 + Math.cos(oBase[i + 2] * .07 + S.t) * .35;
+    for (let i = 0; i < a.length; i += 3) a[i + 1] = Math.sin(oBase[i] * .05 + S.t * .7) * .45 + Math.cos(oBase[i + 2] * .045 + S.t * .55) * .4 + Math.sin((oBase[i] + oBase[i + 2]) * .2 + S.t * 1.6) * .06;
     oceanG.attributes.position.needsUpdate = true; }
   pylons.forEach((p, i) => { p.rotation.y += dt * 2; p.position.y = 8.5 + Math.sin(S.t * 2 + i) * .4; });
 
   if (S.mode === 'title') { const r = 70; cam.fov = 60; cam.updateProjectionMatrix(); cam.position.set(Math.cos(S.t * .1) * r, 22, Math.sin(S.t * .1) * r); cam.lookAt(0, 3, 0); }
   else if (S.mode === 'over' || S.mode === 'overfade') { // aerial overview: archipelago reads as the HertzFlow mark, camera dives through clouds
-    const k = Math.min(1, S.t / 5), e = k * k * (3 - 2 * k); cam.fov = 55; cam.updateProjectionMatrix();
-    { const [ox, oz] = S.ovC || [0, 0], R = Math.max(120, S.ovR || 200); cam.position.set(ox + Math.sin(S.t * .15) * 15, R * 1.6 - e * R * .7, oz + R * .35 - e * R * .1); cam.lookAt(ox, 0, oz + e * 10); } const cv = Math.max(0, (k - .6) / .4); cover.forEach(c => c.material.opacity = cv * .95);
-    if (S.t > 4.4 && S.mode === 'over') { S.mode = 'overfade'; fade(1); setTimeout(() => { if (S.mode === 'overfade') { startBoat(); fade(0); } }, 700); }
+    const T = S.t, dk = Math.min(1, Math.max(0, (T - 7.5) / 2.5)), e = dk * dk * (3 - 2 * dk), orb = Math.min(1, Math.max(0, (T - 3) / 4.5)); cam.fov = 55; cam.updateProjectionMatrix();
+    clouds.children.forEach(c => { const u = c.userData; if (!u.v) return; c.position.x += u.v * dt; if (c.position.x > 220) c.position.x = -220; const b = 1 + Math.sin(T * .6 + u.ph) * .06; c.scale.set(u.s.x * b, 1, u.s.z * b); });
+    if (crumb.visible = T < 7.5) { const segs = MAP.path, L = segs.length, f = Math.min(.999, T / 6) * L, sg = segs[f | 0], q = f % 1; crumb.position.set(sg[0] + (sg[2] - sg[0]) * q, 3, sg[1] + (sg[3] - sg[1]) * q); crumb.material.opacity = .9; }
+    { const [ox, oz] = S.ovC || [0, 0], R = Math.max(120, S.ovR || 200); const ang = (orb - .5) * 1.1; cam.position.set(ox + Math.sin(ang) * R * .35, R * 1.6 - orb * R * .15 - e * R * .75, oz + R * .35 * Math.cos(ang) - e * R * .15); cam.lookAt(ox, 0, oz + e * 10); } const cv = Math.max(0, (dk - .3) / .7); cover.forEach(c => c.material.opacity = cv * .95);
+    if (S.t > 10 && S.mode === 'over') { S.mode = 'overfade'; fade(1); setTimeout(() => { if (S.mode === 'overfade') { startBoat(); fade(0); } }, 700); }
   }
-  else if (S.mode === 'cine' || S.mode === 'fading') { boat.userData.wake.forEach((w, i) => { w.material.opacity = (i < 2 ? .3 : .45) + Math.sin(S.t * 9 + i) * .08; });
-    const k = Math.min(1, S.t / 13); boat.position.z = 230 - k * 190; boat.position.y = Math.sin(S.t * 6) * .25; boat.rotation.z = Math.sin(S.t * 2) * .06; boat.rotation.x = -.06;
+  else if (S.mode === 'cine' || S.mode === 'fading') { boat.userData.wake.forEach((w, i) => { w.material.opacity = (i < 4 ? .32 : .5) + Math.sin(S.t * 9 + i) * .1; });
+    const k = Math.min(1, S.t / 13); boat.position.z = 230 - k * 190; boat.position.y = Math.sin(S.t * 2.2) * .18 + Math.sin(S.t * 5.3) * .05; boat.rotation.z = Math.sin(S.t * 1.1) * .04; boat.rotation.x = -.07 + Math.sin(S.t * 1.7) * .02;
     burst(new THREE.Vector3(boat.position.x + (Math.random() - .5) * 3, .2, boat.position.z + 5), [0xffffff, 0xbff6ff], 2, 3, 2, 8);
     $('#cineSub').textContent = `Ember Dot · ${Math.max(0, (boat.position.z - 34) / 500).toFixed(2)} km`;
     const sw = Math.sin(S.t * .35) * 6;

@@ -87,3 +87,16 @@ body:not(.touch) #stick{display:none}
 #modes{display:flex;gap:8px;margin:2px 0 8px;flex-wrap:wrap;justify-content:center}
 #modes button{pointer-events:auto;cursor:pointer;background:#0a1220cc;color:#cfe;border:1px solid #4DB8FF66;border-radius:6px;padding:7px 14px;font-weight:800;letter-spacing:2px;font-size:12px}
 #modes button.on{background:#4DB8FF;color:#021;border-color:#4DB8FF}#modes button:disabled{opacity:.4;cursor:default}
+/* Bone King class cards: gold/charcoal plates, mini silhouette, role chip, 1-liner, 3 kit icons, hard select border */
+.card.bk{background:linear-gradient(180deg,#1b1a1d,#0f0f12);border:2px solid #6b5a2e;border-radius:6px;box-shadow:inset 0 0 0 1px #000,0 6px 18px #0008;padding:12px 12px 14px;gap:6px}
+.card.bk .plate{width:100%;display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 0 8px;background:linear-gradient(180deg,#2a2620,#151417);border:1px solid #c9a24a55;border-radius:3px;position:relative}
+.card.bk .port{width:64px;height:64px;border-radius:4px;border:2px solid #c9a24a;background:#0b0b0d;position:relative}
+.card.bk .sil{width:40px;height:48px}.card.bk .port em{position:absolute;right:-8px;bottom:-8px;font-style:normal;font-size:16px}
+.card.bk .role{font-size:10px;letter-spacing:2px;text-transform:uppercase;padding:2px 10px;border-radius:2px;background:#c9a24a;color:#141210;font-weight:800}
+.card.bk h3{color:#f0d68a;letter-spacing:2px;margin:2px 0 0}
+.card.bk .line{font-size:11px;letter-spacing:.5px;color:#d9d3c4;min-height:30px;text-align:center;margin:0}
+.card.bk .kicons{display:flex;gap:8px}.card.bk .kicons span{width:28px;height:28px;display:grid;place-items:center;background:#0b0b0d;border:1px solid var(--k);color:var(--k);border-radius:3px;font-size:14px}
+.card.bk.pick{cursor:pointer;box-shadow:inset 0 0 0 1px #000,0 6px 18px #0008}.card.bk.pick:hover{border-color:#f0d68a;transform:none}
+.card.bk.pick:hover,.card.bk.sel{outline:3px solid #f0d68a;outline-offset:2px}
+.card.bk.pick b{background:#c9a24a;color:#141210;border-radius:2px;padding:5px 22px;letter-spacing:2px}
+.card.bk.locked{filter:none;opacity:.8}.card.bk.locked h3{color:#8a826e}
