@@ -97,3 +97,10 @@ Boat: longer hull, raked windshield, outboard cowling, soft bob/roll, denser wak
 
 ## Class cards (Bone King layout)
 Gold/charcoal plate, mini silhouette, role chip, 1-liner, 3 kit icons (wave/chain/roar), hard gold select border. Starters: Lyra · Scout, Hertzling · Spirit, Chado · Blade. Locked cards show "—" until tease lines land.
+
+## Combat feel (art lock)
+- Acquire 18u: auto-fire only on a foe inside acquire range; never into canopy fog. Auto-target has hysteresis (no flip-flop).
+- Spawn telegraph: 0.4s thin magenta rim at the canopy-edge spawn point, then the foe enters (no body flash).
+- Cursor: soft cyan ground reticle; sticky ~22° cone snaps to a readable foe; outside the cone the cursor always wins.
+- Facing dead-zone kills yaw jitter; dodge hop 2.1u.
+- Foe read: tiny HP bar only within range; locked foe shows its name (Driftwood Crab / Wick Runner / Red Candle Brute). Float numbers + white hit-flash unchanged.

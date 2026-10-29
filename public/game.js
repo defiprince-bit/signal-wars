@@ -410,9 +410,9 @@ const STATIC_COL = new THREE.Color(0xd8204e), HIT_COL = new THREE.Color(0xffffff
 
 // ===== enemies (crabs instanced; runners/brutes share STATIC) =====
 const TYPES = {
-  crab: { hp: 18, sp: 6, dmg: 3, r: .9, xp: 1 },
-  wick: { hp: 14, sp: 9.5, dmg: 3, r: .7, xp: 1 },
-  brute: { hp: 260, sp: 3.2, dmg: 22, r: 2.2, xp: 8 },
+  crab: { name: 'Driftwood Crab', hp: 18, sp: 6, dmg: 3, r: .9, xp: 1 },
+  wick: { name: 'Wick Runner', hp: 14, sp: 9.5, dmg: 3, r: .7, xp: 1 },
+  brute: { name: 'Red Candle Brute', hp: 260, sp: 3.2, dmg: 22, r: 2.2, xp: 8 },
 };
 const MAXC = 320;
 function mergeG(list) { // tiny merge (non-indexed) so a crab part stays ONE instanced draw
@@ -478,8 +478,10 @@ function floatTxt(p, t, big = false, col = '#fff') { const v = +t;
 function drawOverlay(dt) {
   const w = innerWidth, h = innerHeight; if (ov.width !== w * DPR) { DPR = Math.min(devicePixelRatio, 2); ov.width = w * DPR; ov.height = h * DPR; }
   ox.setTransform(DPR, 0, 0, DPR, 0, 0); ox.clearRect(0, 0, w, h); if (S.mode !== 'play' && S.mode !== 'end') return;
-  for (const e of enemies) { if (e.hp >= e.mhp) continue; const [sx, sy] = toScreen(e.pos, e.type === 'brute' ? 7 : 3.2), bw = e.type === 'brute' ? 70 : 30;
-    ox.fillStyle = 'rgba(0,0,0,.7)'; ox.fillRect(sx - bw / 2 - 1, sy - 1, bw + 2, 5); ox.fillStyle = '#ff2a3a'; ox.fillRect(sx - bw / 2, sy, bw * Math.max(0, e.hp / e.mhp), 3); }
+  ox.textAlign = 'center'; ox.font = '600 10px system-ui,sans-serif';
+  for (const e of enemies) { const d = Math.hypot(e.pos.x - zayn.position.x, e.pos.z - zayn.position.z); if (d > ACQ && e.type !== 'brute') continue; const [sx, sy] = toScreen(e.pos, e.type === 'brute' ? 7 : 3.2), bw = e.type === 'brute' ? 70 : 28;
+    ox.fillStyle = 'rgba(0,0,0,.7)'; ox.fillRect(sx - bw / 2 - 1, sy - 1, bw + 2, 5); ox.fillStyle = '#ff2a3a'; ox.fillRect(sx - bw / 2, sy, bw * Math.max(0, e.hp / e.mhp), 3);
+    if (e === S.lock || e.type === 'brute') { ox.lineWidth = 3; ox.strokeStyle = 'rgba(0,0,0,.8)'; ox.strokeText(e.T.name, sx, sy - 5); ox.fillStyle = e === S.lock ? '#bff8ff' : '#e8e8e8'; ox.fillText(e.T.name, sx, sy - 5); } }
   ox.textAlign = 'center'; ox.lineJoin = 'round';
   for (let i = nums.length - 1; i >= 0; i--) { const n = nums[i]; n.t += dt; if (n.t > .9) { nums.splice(i, 1); continue; }
     n.vy += 900 * dt; const [sx, sy] = toScreen(n, n.y); n.ox = (n.ox || 0) + n.vx * dt; n.oy = Math.min((n.oy || 0) + n.vy * dt, 10);
@@ -511,10 +513,10 @@ const show = (id, on) => $(id).classList.toggle('hide', !on);
 const BG_DAY = new THREE.Color(0xffc49a), BG_DARK = new THREE.Color(0x0a0c12);
 function setArena(on) { const zc = MODELS.zayn && MODELS.zayn.userData.combat; if (zc) zc(on); arena.visible = on; decor.forEach(o => o.visible = !on); ocean.visible = !on; scene.background = on ? new THREE.Color(MAP.fog) : BG_DAY; scene.fog.color.set(on ? MAP.fog : 0xffd2a8); scene.fog.near = on ? 70 : 90; scene.fog.far = on ? 170 : 320; hemi.intensity = on ? (MAP.storm ? .55 : .75) : 1.1; sun.intensity = on ? (MAP.storm ? .6 : 1.1) : 1.9; sky.visible = !on; }
 
-function clearField() { enemies.forEach(e => e.mesh && scene.remove(e.mesh)); enemies.length = 0; gems.length = 0; nums.length = 0; decals.forEach(d => scene.remove(d.m)); decals.length = 0; }
+function clearField() { S.runTok = (S.runTok || 0) + 1; enemies.forEach(e => e.mesh && scene.remove(e.mesh)); enemies.length = 0; gems.length = 0; nums.length = 0; decals.forEach(d => scene.remove(d.m)); decals.length = 0; }
 function startCine() {
   $('#title').classList.remove('on'); show('#title', false); show('#cine', true); show('#hud', false); show('#end', false);
-  S.mode = 'over'; S.t = 0; boat.visible = false; setArena(false); clearField(); shield.visible = false; clouds.visible = true; scene.fog.far = 2000; cover.forEach(c => c.material.opacity = 0); scene.add(crumb);
+  S.mode = 'over'; S.t = 0; reticle.visible = false; boat.visible = false; setArena(false); clearField(); shield.visible = false; clouds.visible = true; scene.fog.far = 2000; cover.forEach(c => c.material.opacity = 0); scene.add(crumb);
   // overview flies the selected map's logo silhouette (green canopy), not the old archipelago
   buildMap(MAPID); arena.visible = true; decor.forEach(o => o.visible = false); ocean.visible = false; scene.background = new THREE.Color(MAP.fog);
   { const bb = new THREE.Box3(); mapG.children.forEach(c => { if (c.geometry && c.geometry.type !== 'PlaneGeometry') bb.expandByObject(c); }); const c = bb.getCenter(new THREE.Vector3()), sz = bb.getSize(new THREE.Vector3()); S.ovC = [c.x, c.z]; S.ovR = Math.max(sz.x, sz.z); }
@@ -558,7 +560,8 @@ function spawn(type, ang) { const T = TYPES[type], a = ang ?? Math.random() * 6.
   const bs = type === 'brute' && SECTIONS[S.sec] && SECTIONS[S.sec].boss, e = { type, T, pos: bs ? new THREE.Vector3(bs[0], 0, bs[1]) : landSpawn(ang), hp: T.hp * (1 + (S.sec || 0) * .35 + Math.max(0, S.wave - 1) * .15), mhp: T.hp * (1 + (S.sec || 0) * .35 + Math.max(0, S.wave - 1) * .15), stun: 0, kb: new THREE.Vector3(), atk: 0, hit: 0, tel: 0, yaw: 0, mesh: type === 'crab' ? null : makeMesh(type) };
   
   if (type === 'brute') { e.mesh.scale.setScalar(1.15); banner('RED CANDLE BRUTE', '#ff2a5a'); }
-  enemies.push(e); burst(e.pos.clone().setY(1), [0xff1450, 0xa24cff], 10, 5, 4);
+  if (bs) { enemies.push(e); return; }
+  ring(e.pos, 0xff2bd6, 2.4, .4, .25, .06); const tok = S.runTok; setTimeout(() => { if (S.runTok === tok && S.mode === 'play') enemies.push(e); }, 400); // 0.4s canopy-edge rim telegraph
 }
 function best() { const b = Math.max(+localStorage.getItem('sw_best') || 0, S.score); localStorage.setItem('sw_best', b); return b; }
 function win() { addMerits(S.xp + 100); S.mode = 'end'; setTimeout(() => { show('#retry', false); tower.visible = false; $('#endT').textContent = 'MISSION COMPLETE'; $('#endT').style.color = '#4DB8FF'; $('#endS').textContent = `${MAP.name} secured · ${S.kills} Static cleared · ${S.xp} gems · score ${S.score} · best ${best()}. Next: Moonleaf Oval. +${S.xp + 100} Merits (◆ ${merits()}).`; show('#end', true); }, 900); }
@@ -632,6 +635,7 @@ function use(p) { if (S.mode !== 'play' || S.cd[p] > 0) return; if (COST[p] && S
 addEventListener('keydown', e => { keys[e.code] = true; const m = { KeyQ: 'wave', KeyE: 'chain', KeyR: 'roar', Space: 'dodge' }[e.code]; if (m) { use(m); e.preventDefault(); } if (S.mode === 'over' && (e.code === 'Enter' || e.code === 'Escape')) { startBoat(); } else if (S.mode === 'cine' && (e.code === 'Enter' || e.code === 'Escape')) landOnBeach(); });
 addEventListener('keyup', e => keys[e.code] = false);
 document.querySelectorAll('.p').forEach(b => b.addEventListener('pointerdown', e => { e.stopPropagation(); use(b.dataset.p); }));
+const ACQ = 18; const reticle = new THREE.Mesh(new THREE.RingGeometry(.82, 1, 40).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: 0x5ff8ff, transparent: true, opacity: .6, depthWrite: false, blending: THREE.AdditiveBlending })); reticle.visible = false; scene.add(reticle);
 const mouse = { x: 0, y: 0, on: false, down: false, ray: new THREE.Raycaster(), plane: new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), hit: new THREE.Vector3() };
 $('#c').addEventListener('pointerdown', e => { if (e.pointerType === 'mouse' && e.button === 0) mouse.down = true; });
 addEventListener('pointerup', () => mouse.down = false);
@@ -701,23 +705,27 @@ function tick(now) {
       const ix = (keys.KeyD || keys.ArrowRight ? 1 : 0) - (keys.KeyA || keys.ArrowLeft ? 1 : 0) + joy.x, iz = (keys.KeyS || keys.ArrowDown ? 1 : 0) - (keys.KeyW || keys.ArrowUp ? 1 : 0) + joy.y;
       const mv = new THREE.Vector3(ix, 0, iz), ml = Math.min(1, mv.length()); if (ml > .1) mv.normalize();
       // aim: mouse on ground, else nearest enemy, else move dir
-      let tgt = null;
-      if (mouse.on) { mouse.ray.setFromCamera({ x: mouse.x, y: mouse.y }, cam); if (mouse.ray.ray.intersectPlane(mouse.plane, mouse.hit)) tgt = mouse.hit; }
-      else { const n = nearest(26); if (n) tgt = n.pos; }
-      if (tgt) S.yaw = Math.atan2(tgt.x - zayn.position.x, tgt.z - zayn.position.z); else if (ml > .1) S.yaw = Math.atan2(mv.x, mv.z);
+      let tgt = null; S.lock = null; const zp0 = zayn.position;
+      if (mouse.on) { mouse.ray.setFromCamera({ x: mouse.x, y: mouse.y }, cam); if (mouse.ray.ray.intersectPlane(mouse.plane, mouse.hit)) { tgt = mouse.hit;
+          // soft sticky: readable foe inside a ~22° cone of the cursor direction nudges aim; cursor always wins outside the cone
+          const ma = Math.atan2(tgt.x - zp0.x, tgt.z - zp0.z); let bs = .38, be = null; for (const e of enemies) { const d = Math.hypot(e.pos.x - zp0.x, e.pos.z - zp0.z); if (d > ACQ) continue; let da = Math.atan2(e.pos.x - zp0.x, e.pos.z - zp0.z) - ma; da = Math.abs(Math.atan2(Math.sin(da), Math.cos(da))); if (da < bs) { bs = da; be = e; } }
+          if (be) { S.lock = be; tgt = be.pos; } } }
+      else { const keepT = S.autoT && enemies.includes(S.autoT) && Math.hypot(S.autoT.pos.x - zp0.x, S.autoT.pos.z - zp0.z) < ACQ + 2 ? S.autoT : null; S.autoT = keepT || nearest(ACQ); if (S.autoT) { tgt = S.autoT.pos; S.lock = S.autoT; } } // hysteresis: no target flip-flop
+      if (tgt) S.yaw = Math.atan2(tgt.x - zp0.x, tgt.z - zp0.z); else if (ml > .1) S.yaw = Math.atan2(mv.x, mv.z);
+      reticle.visible = !!(S.lock || mouse.on); if (reticle.visible) { const rp = S.lock ? S.lock.pos : mouse.hit; reticle.position.set(rp.x, .25, rp.z); const rs = (S.lock ? 2.6 : 1.8) * (1 + Math.sin(S.t * 8) * .06); reticle.scale.set(rs, rs, rs); reticle.material.opacity = S.lock ? .85 : .4; }
       const top = CH.speed * (S.frenzy > 0 ? 1.3 : 1); if (!S.vel) S.vel = new THREE.Vector3();
       if (S.dodge > 0) { S.dodge -= dt; S.vel.copy(S.dodgeDir).multiplyScalar(58 * (.4 + S.dodge / .18 * .6)); burst(zayn.position.clone().setY(1.5), [CH.wave.col, 0xffffff], 4, 2, 1, 0); }
       else { const want = mv.clone().multiplyScalar(top * ml), k = 1 - Math.exp(-dt * (ml > .1 ? 22 : 30)); S.vel.lerp(want, k); } // snappy accel, near-instant stop
       zayn.position.addScaledVector(S.vel, dt); const spd = S.vel.length(); S.stride = (S.stride || 0) + spd * dt * .55;
-      const hop = S.dodge > 0 ? Math.sin((1 - S.dodge / .18) * Math.PI) * 1.4 : Math.abs(Math.sin(S.stride * Math.PI)) * Math.min(1, spd / top) * .55; zayn.position.y = .3 + hop;
+      const hop = S.dodge > 0 ? Math.sin((1 - S.dodge / .18) * Math.PI) * 2.1 : Math.abs(Math.sin(S.stride * Math.PI)) * Math.min(1, spd / top) * .55; zayn.position.y = .3 + hop;
       const lean = Math.min(.28, spd / top * .22); zayn.rotation.x = lean * Math.cos(Math.atan2(S.vel.x, S.vel.z) - zayn.rotation.y) * (S.dodge > 0 ? 2 : 1);
       zayn.scale.set(1, 1 + (S.land = Math.max(0, (S.land || 0) - dt * 6)) * -.18 + (S.dodge > 0 ? .1 : 0), 1); if (hop < .03 && spd > 3 && !S.wasDown) { S.land = .6; } S.wasDown = hop < .03; clampTo(zayn.position, (x, z) => pathD(x, z, S.open ?? 0), 0);
-      let dy = S.yaw - zayn.rotation.y; dy = Math.atan2(Math.sin(dy), Math.cos(dy)); zayn.rotation.y += dy * Math.min(1, dt * 40); // snap-to-face
+      let dy = S.yaw - zayn.rotation.y; dy = Math.atan2(Math.sin(dy), Math.cos(dy)); zayn.rotation.y += Math.abs(dy) < .04 ? 0 : dy * Math.min(1, dt * 28); // snap-to-face, dead-zone kills jitter
       const ud = zayn.userData, w = spd > 2 ? Math.sin(S.stride * Math.PI) * .9 : 0; ud.legL.rotation.x = w; ud.legR.rotation.x = -w; ud.tail.rotation.z = Math.sin(S.t * 3) * .25; ud.core.rotation.y += dt * 3; tower.userData.core.rotation.y += dt * 1.5;
       S.swing = Math.max(0, S.swing - dt); ud.armR.rotation.x = S.swing > 0 ? -2.2 + (.2 - S.swing) * 16 : -.2 + w * .3;
       for (const k in S.cd) S.cd[k] = Math.max(0, S.cd[k] - dt); S.iframes -= dt; S.buff -= dt; S.frenzy = (S.frenzy || 0) - dt; S.en = Math.min(100, S.en + dt * 3);
       // auto-fire WAVE (kite + shoot); mouse hold / Q also fires
-      if (mouse.down || (!mouse.on && nearest(24)) || (mouse.on && nearest(26))) use('wave');
+      if (mouse.down || S.lock) use('wave'); // auto-fire only on a readable foe (≤ACQ), never into canopy fog
       if (S.spawnQ.length) { S.spawnT -= dt; if (S.spawnT <= 0) { const a = Math.random() * 6.28, n = Math.min(S.spawnQ.length, 4 + S.wave * 2); for (let k = 0; k < n; k++) spawn(S.spawnQ.shift(), a + (Math.random() - .5) * .9); S.spawnT = 1.4 - S.wave * .2; } }
       else if (S.wave && S.wave >= WAVES.length) { const c = SECTIONS[S.sec];
         if (c.hold && S.hold < c.hold) { if (enemies.length < 10) S.spawnQ.push(...rep('crab', 8)); } // keep pressure until the tower is restored
