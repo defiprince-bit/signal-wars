@@ -274,7 +274,7 @@ const boat = new THREE.Group();
   const glass = new THREE.Mesh(new THREE.BoxGeometry(3.1, 1.1, .12), M(0x9fe8ff, .25, { transparent: true, opacity: .55, metalness: .6, roughness: .05 })); glass.position.set(0, 1.45, 2.6); glass.rotation.x = -1.0; const frame = new THREE.Mesh(new THREE.BoxGeometry(3.2, .1, .1), M(0x14161c, 0)); frame.position.set(0, 1.85, 2.3); boat.add(frame);
   const motor = new THREE.Mesh(new THREE.BoxGeometry(.35, 1.9, .5), M(0x14161c, 0, { metalness: .6, roughness: .3 })); motor.position.set(0, .2, -6.6);
   const cowl = new THREE.Mesh(new THREE.CapsuleGeometry(.6, .7, 4, 10), M(0x1a1d24, 0, { metalness: .5, roughness: .25 })); cowl.rotation.x = Math.PI / 2; cowl.scale.set(1, 1, .85); cowl.position.set(0, 1.55, -6.6); const cap = new THREE.Mesh(new THREE.BoxGeometry(1, .08, .9), M(SKY, 1)); cap.position.set(0, 2.05, -6.6); boat.add(cap);
-  boat.add(keel, hull, stripe, deck, glass, motor, cowl);
+  const seat = new THREE.Mesh(new THREE.BoxGeometry(2.4, .45, 1.6), M(0x1a1d24, 0, { roughness: .7 })); seat.position.set(0, 1.12, -.9); boat.add(keel, hull, stripe, deck, glass, motor, cowl, seat);
   // wake: two foam ribbons + a center churn (shared additive sprite, no particles flood)
   const foam = (x, rot) => { const w = sprite(STREAK, 0xcfeff5, 1.3, 30, .35); w.material.blending = THREE.NormalBlending; w.position.set(x, -.3, -24); w.rotation.y = Math.PI + rot; boat.add(w); return w; };
   const blob = (x, z, sx, sz) => { const c = sprite(ORB, 0xf2fbff, sx, sz, .8); c.material.blending = THREE.NormalBlending; c.position.set(x, -.2, z); boat.add(c); return c; };
@@ -523,11 +523,12 @@ function startCine() {
   $('#cineText').textContent = MAPID === 'binance' ? 'BINANCE SIEGE' : 'HERTZFLOW'; $('#cineSub').textContent = MAPID === 'binance' ? 'SHORE ▸ West Channel ▸ East Fort ▸ Outer L ▸ CORE' : 'SHORE ▸ Left Pill ▸ H Bridge ▸ Right Pill ▸ EXTRACT';
 }
 function startBoat() { crumb.visible = false; S.mode = 'cine'; S.t = 0; clouds.visible = false; setArena(false); scene.fog.far = 320; $('#cineText').textContent = 'ALMOST THERE';
-  boat.visible = true; boat.position.set(0, 0, 230); boat.rotation.y = Math.PI; boat.add(zayn); zayn.position.set(0, .9, -1); zayn.rotation.set(0, 0, 0); zayn.scale.set(1, 1, 1); }
+  boat.visible = true; boat.position.set(0, 0, 230); boat.rotation.y = Math.PI; boat.add(zayn); zayn.position.set(0, -1.05, -.6); zayn.rotation.set(0, 0, 0); zayn.scale.set(1, 1, 1); seatPose(true); }
+function seatPose(on) { const u = zayn.userData; if (!u.legL) return; u.legL.rotation.set(on ? -1.45 : 0, 0, on ? -.12 : 0); u.legR.rotation.set(on ? -1.45 : 0, 0, on ? .12 : 0); if (u.armR) { u.armR.rotation.set(on ? -.25 : -.2, 0, on ? .55 : 0); } } // seated Almost There: knees bent mid-hull, hand down on the gunwale
 function landOnBeach() {
   if (S.mode !== 'cine') return; S.mode = 'fading'; fade(1);
   setTimeout(() => {
-    boat.visible = false; boat.remove(zayn); scene.add(zayn); buildMap(MAPID); S.yaw = Math.PI; setArena(true);
+    boat.visible = false; boat.remove(zayn); scene.add(zayn); seatPose(false); buildMap(MAPID); S.yaw = Math.PI; setArena(true);
     Object.assign(S, { hp: CH.hp, en: 40, score: 0, kills: 0, xp: 0, wave: 0, iframes: 0, buff: 0, spawnQ: [], waveNext: 0, cd: { wave: 0, chain: 0, roar: 0, dodge: 0 } });
     show('#cine', false); show('#hud', true);
     startSection(0, true);
@@ -651,7 +652,7 @@ const merits = () => +localStorage.getItem('sw_merits') || 0, owned = () => new 
 const isOwned = id => ALL || owned().has(id);
 function addMerits(n) { localStorage.setItem('sw_merits', merits() + n); }
 const CLASS = { lyra: ['Scout', 'FAST FEET, GREEN BOLTS, ONE MOON RAIN.'], hertzling: ['Spirit', 'PULLS THE PACK, THEN BREAKS THE ECHO.'], chado: ['Blade', 'TWO BLADES, ONE DASH — THEY NEVER SEE IT.'],
-  kael: ['Guard', 'Line placeholder.'], warden: ['Warden', 'Line placeholder.'], bankyo: ['Vault', 'Line placeholder.'], zayn: ['Sniper', 'Line placeholder.'], hero: ['Founder', 'Line placeholder.'] };
+  kael: ['Berserker', 'Line placeholder.'], warden: ['Vanguard', 'Line placeholder.'], bankyo: ['Tidekeeper', 'Line placeholder.'], zayn: ['Outer King', 'Line placeholder.'], hero: ['Founder', 'Line placeholder.'] };
 const SIL = col => `<svg viewBox="0 0 40 48" class="sil"><circle cx="20" cy="11" r="7" fill="${col}"/><path d="M8 46 L11 24 Q20 17 29 24 L32 46 Z" fill="${col}"/><path d="M29 26 L38 18" stroke="${col}" stroke-width="3"/></svg>`;
 const KIT = c => `<div class="kicons">${[['◆', c.wave.col, 'Wave'], ['◎', c.chain.col, c.chain.name], ['✦', c.roar.col, c.roar.name]].map(([g, col, t]) => `<span title="${t}" style="--k:#${new THREE.Color(col).getHexString()}">${g}</span>`).join('')}</div>`;
 function boneCard(id, c, own) { const [role, line] = CLASS[id] || ['Hero', 'Line placeholder.'];
@@ -697,7 +698,7 @@ function tick(now) {
     burst(new THREE.Vector3(boat.position.x + (Math.random() - .5) * 3, .2, boat.position.z + 5), [0xffffff, 0xbff6ff], 2, 3, 2, 8);
     $('#cineSub').textContent = `Ember Dot · ${Math.max(0, (boat.position.z - 34) / 500).toFixed(2)} km`;
     const sw = Math.sin(S.t * .35) * 6;
-    cam.position.set(boat.position.x + sw, 9 + Math.sin(S.t) * .4, boat.position.z + 19); cam.lookAt(boat.position.x, 3, boat.position.z - 20);
+    cam.position.set(boat.position.x + sw * .7, 13.5 + Math.sin(S.t) * .4, boat.position.z + 27); cam.lookAt(boat.position.x, 2, boat.position.z - 22); zayn.position.y = -1.05 + Math.sin(S.t * 2.2 + .6) * .04; seatPose(true);
     if (S.t > 13.5) landOnBeach();
   } else {
     if (S.mode === 'play') {

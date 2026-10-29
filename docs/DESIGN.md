@@ -104,3 +104,4 @@ Gold/charcoal plate, mini silhouette, role chip, 1-liner, 3 kit icons (wave/chai
 - Cursor: soft cyan ground reticle; sticky ~22° cone snaps to a readable foe; outside the cone the cursor always wins.
 - Facing dead-zone kills yaw jitter; dodge hop 2.1u.
 - Foe read: tiny HP bar only within range; locked foe shows its name (Driftwood Crab / Wick Runner / Red Candle Brute). Float numbers + white hit-flash unchanged.
+- Boat ride: seated mid-hull (knees bent, hand on gunwale), soft seat bob; camera pulled back/high to show the full hull; stands only after the beach fade.
